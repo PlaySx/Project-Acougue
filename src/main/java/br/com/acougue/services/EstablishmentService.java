@@ -3,10 +3,13 @@ package br.com.acougue.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.globalException.ProductNaoEncontradoException;
 import br.com.acougue.repository.EstablishmentRepository;
 
+@Service
 public class EstablishmentService {
 	
 	private EstablishmentRepository establishmentRepository;

@@ -5,35 +5,48 @@ import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "tb_establishment")
 public class Establishment {
 
+	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	private String name;
-
 	private Long Cnpj;
 
+	// ✅ CORRIGIDO: Agora funciona porque Client tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
-	private List<Client> Client = new ArrayList<Client>();
+	private List<Client> clients = new ArrayList<>();  // Mudei nome para 'clients'
 
+	// ✅ CORRIGIDO: Agora funciona porque Products tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
-	private List<Products> products = new ArrayList<Products>();
+	private List<Products> products = new ArrayList<>();
 
-	public Establishment(Long id, String name, Long cnpj, List<br.com.acougue.entities.Client> client,
-			List<Products> products) {
-		super();
+	// ✅ CORRIGIDO: Nome da propriedade em Order.java é 'establishment'
+	@OneToMany(mappedBy = "establishment")
+	private List<Order> orders = new ArrayList<>();  // Mudei nome para 'orders'
+
+	public Establishment() {}
+
+	public Establishment(Long id, String name, Long cnpj, List<Client> clients,
+			List<Products> products, List<Order> orders) {
 		this.id = id;
 		this.name = name;
-		Cnpj = cnpj;
-		Client = client;
+		this.Cnpj = cnpj;
+		this.clients = clients;  // ✅ ATUALIZADO
 		this.products = products;
+		this.orders = orders;    // ✅ ATUALIZADO
 	}
 
+	
 	public Long getId() {
 		return id;
 	}
@@ -58,12 +71,12 @@ public class Establishment {
 		Cnpj = cnpj;
 	}
 
-	public List<Client> getClient() {
-		return Client;
+	public List<Client> getClients() {
+		return clients;
 	}
 
-	public void setClient(List<Client> client) {
-		Client = client;
+	public void setClients(List<Client> clients) {
+		this.clients = clients;
 	}
 
 	public List<Products> getProducts() {
@@ -74,9 +87,12 @@ public class Establishment {
 		this.products = products;
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(Client, Cnpj, id, name, products);
+	public List<Order> getOrders() {
+		return orders;
+	}
+
+	public void setOrders(List<Order> orders) {
+		this.orders = orders;
 	}
 
 	@Override
@@ -88,8 +104,8 @@ public class Establishment {
 		if (getClass() != obj.getClass())
 			return false;
 		Establishment other = (Establishment) obj;
-		return Objects.equals(Client, other.Client) && Objects.equals(Cnpj, other.Cnpj) && Objects.equals(id, other.id)
-				&& Objects.equals(name, other.name) && Objects.equals(products, other.products);
+		return Objects.equals(Cnpj, other.Cnpj) && Objects.equals(clients, other.clients)
+				&& Objects.equals(id, other.id) && Objects.equals(name, other.name)
+				&& Objects.equals(orders, other.orders) && Objects.equals(products, other.products);
+	}	
 	}
-
-}

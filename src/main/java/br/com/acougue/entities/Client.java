@@ -1,5 +1,6 @@
 package br.com.acougue.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,10 +11,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tb_Client_List")
+@Table(name = "tb_client")
 public class Client {
 
 	@Id
@@ -27,13 +30,20 @@ public class Client {
 	@ManyToMany
 	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	private List<Products> products;
+	
+	@OneToMany(mappedBy = "client")
+	private List<Order> order = new ArrayList<>();
+	
+	@ManyToOne
+	@JoinColumn(name = "establishment_id")
+	private Establishment establishment;
 
 	public Client() {
 
 	}
 
 	public Client(Long id, String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, List<Products> products) {
+			String observation, List<Products> products, List<Order> order, Establishment establishment) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -42,10 +52,16 @@ public class Client {
 		this.addressNeighborhood = addressNeighborhood;
 		Observation = observation;
 		this.products = products;
+		this.order = order;
+		this.establishment = establishment;
 	}
 
 	public Long getId() {
 		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -92,9 +108,30 @@ public class Client {
 		return products;
 	}
 
+	public void setProducts(List<Products> products) {
+		this.products = products;
+	}
+
+	public List<Order> getOrder() {
+		return order;
+	}
+
+	public void setOrder(List<Order> order) {
+		this.order = order;
+	}
+
+	public Establishment getEstablishment() {
+		return establishment;
+	}
+
+	public void setEstablishment(Establishment establishment) {
+		this.establishment = establishment;
+	}
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(Observation, address, addressNeighborhood, id, name, numberPhone, products);
+		return Objects.hash(Observation, address, addressNeighborhood, establishment, id, name, numberPhone, order,
+				products);
 	}
 
 	@Override
@@ -107,9 +144,12 @@ public class Client {
 			return false;
 		Client other = (Client) obj;
 		return Objects.equals(Observation, other.Observation) && Objects.equals(address, other.address)
-				&& Objects.equals(addressNeighborhood, other.addressNeighborhood) && Objects.equals(id, other.id)
+				&& Objects.equals(addressNeighborhood, other.addressNeighborhood)
+				&& Objects.equals(establishment, other.establishment) && Objects.equals(id, other.id)
 				&& Objects.equals(name, other.name) && Objects.equals(numberPhone, other.numberPhone)
-				&& Objects.equals(products, other.products);
+				&& Objects.equals(order, other.order) && Objects.equals(products, other.products);
 	}
 
+	
+	
 }
