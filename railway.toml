@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [build.nixpacksConfig]
-javaVersion = "21"
+javaVersion = "17"
 
 [deploy]
 startCommand = "java -jar target/Project-Acougue-0.0.1-SNAPSHOT.jar"
@@ -11,4 +11,4 @@ healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 
 [environments.production.variables]
-JAVA_VERSION = "21"
+JAVA_VERSION = "17"
