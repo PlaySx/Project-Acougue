@@ -16,7 +16,7 @@ FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # Copia o .jar gerado do build anterior
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/*SNAPSHOT.jar app.jar
 
 # Comando para iniciar a aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]
