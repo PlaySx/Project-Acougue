@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -23,17 +24,27 @@ public class Client {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@Column(name = "client_name")
 	private String name;
+	
+	@Column(name = "number_phone")
 	private Long numberPhone;
+	
+	@Column(name = "client_address")
 	private String address;
+	
+	@Column(name = "address_neighborhood")
 	private String addressNeighborhood;
+	
+	@Column(name = "client_observation")
 	private String Observation;
 	@ManyToMany
 	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	private List<Products> products;
 	
 	@OneToMany(mappedBy = "client")
-	private List<Order> order = new ArrayList<>();
+	private List<Order> orders = new ArrayList<>();
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "establishment_id")
@@ -44,7 +55,7 @@ public class Client {
 	}
 
 	public Client(Long id, String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, List<Products> products, List<Order> order, Establishment establishment) {
+			String observation, List<Products> products, List<Order> orders, Establishment establishment) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -53,7 +64,7 @@ public class Client {
 		this.addressNeighborhood = addressNeighborhood;
 		Observation = observation;
 		this.products = products;
-		this.order = order;
+		this.orders = orders;
 		this.establishment = establishment;
 	}
 
@@ -113,12 +124,12 @@ public class Client {
 		this.products = products;
 	}
 
-	public List<Order> getOrder() {
-		return order;
+	public List<Order> getOrders() {
+		return orders;
 	}
 
-	public void setOrder(List<Order> order) {
-		this.order = order;
+	public void setOrders(List<Order> orders) {
+		this.orders = orders;
 	}
 
 	public Establishment getEstablishment() {
@@ -131,7 +142,7 @@ public class Client {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(Observation, address, addressNeighborhood, establishment, id, name, numberPhone, order,
+		return Objects.hash(Observation, address, addressNeighborhood, establishment, id, name, numberPhone, orders,
 				products);
 	}
 
@@ -148,7 +159,7 @@ public class Client {
 				&& Objects.equals(addressNeighborhood, other.addressNeighborhood)
 				&& Objects.equals(establishment, other.establishment) && Objects.equals(id, other.id)
 				&& Objects.equals(name, other.name) && Objects.equals(numberPhone, other.numberPhone)
-				&& Objects.equals(order, other.order) && Objects.equals(products, other.products);
+				&& Objects.equals(orders, other.orders) && Objects.equals(products, other.products);
 	}
 
 	

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import br.com.acougue.enums.OrderStatus;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,14 +27,17 @@ public class Order {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	
+	@Column(name = "order_date_time")
 	private LocalDateTime datahora;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(name = "order_status")
 	private OrderStatus status = OrderStatus.PENDENTE;
 	
+	@Column(name = "payment_method")
 	private String paymentMethod;
 	
+	@Column(name = "order_observation")
 	private String observação;
 	
 	@ManyToOne
