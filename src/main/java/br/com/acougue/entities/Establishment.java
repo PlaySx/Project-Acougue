@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,8 +20,14 @@ public class Establishment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@Column(name = "establishment_name")
 	private String name;
+	
+	@Column(name = "cnpj")
 	private Long Cnpj;
+	
+	@Column(name = "establishment_address")
 	private String adress;
 
 	//Agora funciona porque Client tem 'establishment'
