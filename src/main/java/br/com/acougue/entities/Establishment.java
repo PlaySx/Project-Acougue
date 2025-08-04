@@ -21,16 +21,17 @@ public class Establishment {
 	private Long id;
 	private String name;
 	private Long Cnpj;
+	private String adress;
 
-	// ✅ CORRIGIDO: Agora funciona porque Client tem 'establishment'
+	//Agora funciona porque Client tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
 	private List<Client> clients = new ArrayList<>();  // Mudei nome para 'clients'
 
-	// ✅ CORRIGIDO: Agora funciona porque Products tem 'establishment'
+	//Agora funciona porque Products tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
 	private List<Products> products = new ArrayList<>();
 
-	// ✅ CORRIGIDO: Nome da propriedade em Order.java é 'establishment'
+	//Nome da propriedade em Order.java é 'establishment'
 	@OneToMany(mappedBy = "establishment")
 	private List<Order> orders = new ArrayList<>();  // Mudei nome para 'orders'
 
@@ -69,6 +70,14 @@ public class Establishment {
 
 	public void setCnpj(Long cnpj) {
 		Cnpj = cnpj;
+	}
+	
+	public String getAdress() {
+		return adress;
+	}
+
+	public void setAdress(String adress) {
+		this.adress = adress;
 	}
 
 	public List<Client> getClients() {
