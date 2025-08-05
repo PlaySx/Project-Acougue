@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import br.com.acougue.enums.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,6 +48,7 @@ public class Order {
 	
 	@ManyToOne
 	@JoinColumn(name = "estabelecimento_id")
+	@JsonIgnore
 	private Establishment establishment;
 	
 	@ManyToMany
@@ -55,7 +58,8 @@ public class Order {
 			inverseJoinColumns = @JoinColumn(name = "product_id")
 			
 			)
-		private List<Products> products = new ArrayList<>();
+	@JsonIgnore
+	private List<Products> products = new ArrayList<>();
 
 	public Order() {
 		

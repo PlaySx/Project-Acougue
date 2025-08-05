@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,21 +27,24 @@ public class Establishment {
 	private String name;
 	
 	@Column(name = "cnpj")
-	private Long Cnpj;
+	private Long cnpj;
 	
 	@Column(name = "establishment_address")
-	private String adress;
+	private String address;
 
 	//Agora funciona porque Client tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
+	@JsonIgnore
 	private List<Client> clients = new ArrayList<>();  // Mudei nome para 'clients'
 
 	//Agora funciona porque Products tem 'establishment'
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
+	@JsonIgnore
 	private List<Products> products = new ArrayList<>();
 
 	//Nome da propriedade em Order.java é 'establishment'
 	@OneToMany(mappedBy = "establishment")
+	@JsonIgnore
 	private List<Order> orders = new ArrayList<>();  // Mudei nome para 'orders'
 
 	public Establishment() {}
@@ -48,7 +53,7 @@ public class Establishment {
 			List<Products> products, List<Order> orders) {
 		this.id = id;
 		this.name = name;
-		this.Cnpj = cnpj;
+		this.cnpj = cnpj;
 		this.clients = clients;  // ✅ ATUALIZADO
 		this.products = products;
 		this.orders = orders;    // ✅ ATUALIZADO
@@ -72,19 +77,19 @@ public class Establishment {
 	}
 
 	public Long getCnpj() {
-		return Cnpj;
+		return cnpj;
 	}
 
 	public void setCnpj(Long cnpj) {
-		Cnpj = cnpj;
+		this.cnpj = cnpj;
 	}
 	
 	public String getAdress() {
-		return adress;
+		return address;
 	}
 
 	public void setAdress(String adress) {
-		this.adress = adress;
+		this.address = adress;
 	}
 
 	public List<Client> getClients() {
@@ -120,7 +125,7 @@ public class Establishment {
 		if (getClass() != obj.getClass())
 			return false;
 		Establishment other = (Establishment) obj;
-		return Objects.equals(Cnpj, other.Cnpj) && Objects.equals(clients, other.clients)
+		return Objects.equals(cnpj, other.cnpj) && Objects.equals(clients, other.clients)
 				&& Objects.equals(id, other.id) && Objects.equals(name, other.name)
 				&& Objects.equals(orders, other.orders) && Objects.equals(products, other.products);
 	}	
