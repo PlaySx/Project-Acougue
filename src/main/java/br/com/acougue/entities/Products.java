@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,7 @@ public class Products {
 	
 	@ManyToOne
 	@JoinColumn(name = "establishment_id")
+	@JsonIgnoreProperties({"clients", "products", "orders"})
 	private Establishment establishment;
 	
 	public Products() {
