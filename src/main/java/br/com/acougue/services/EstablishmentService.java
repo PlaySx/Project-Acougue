@@ -33,7 +33,7 @@ public class EstablishmentService {
 				.map(establishment ->{
 					establishment.setName(establishmentAtualizado.getName());
 					establishment.setCnpj(establishment.getCnpj());
-					establishment.setAdress(establishment.getAdress());
+					establishment.setAddress(establishment.getAddress());
 					return establishmentRepository.save(establishment);
 				})
 		 .orElseThrow(() -> new ProductNaoEncontradoException("Estabelecimento não encontrado com id: " + id));
