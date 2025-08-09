@@ -5,61 +5,61 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import br.com.acougue.dto.ClientRequestDTO;
+import br.com.acougue.dto.ClientResponseDTO;
 import br.com.acougue.entities.Client;
-import br.com.acougue.entities.Establishment;
 import br.com.acougue.globalException.ClienteNaoEncontradoException;
+import br.com.acougue.mapper.ClientMapper;
 import br.com.acougue.repository.ClientRepository;
-import br.com.acougue.repository.EstablishmentRepository;
 
 @Service
 public class ClientService {
 
     @Autowired
     private ClientRepository clientRepository;
-
+    
     @Autowired
-    private EstablishmentRepository establishmentRepository;
+    private ClientMapper clientMapper;
 
-    public Client salvar(Client client) {
-        if (client.getEstablishment() != null && client.getEstablishment().getId() != null) {
-            Establishment est = establishmentRepository.findById(client.getEstablishment().getId())
-                    .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
-            client.setEstablishment(est);
-        }
-        Client saved = clientRepository.save(client);
+    @Transactional
+    public ClientResponseDTO create(ClientRequestDTO clientRequestDTO) {
+        Client client = clientMapper.toEntity(clientRequestDTO);
+        Client savedClient = clientRepository.save(client);
+        
         // Buscar novamente para garantir que vem com todos os dados carregados
-        return clientRepository.findById(saved.getId())
+        Client clientWithRelations = clientRepository.findById(savedClient.getId())
                 .orElseThrow(() -> new RuntimeException("Erro ao buscar cliente salvo"));
+        
+        return clientMapper.toResponseDTO(clientWithRelations);
     }
 
-    public List<Client> listarTodos() {
-        return clientRepository.findAll();
+    public List<ClientResponseDTO> findAll() {
+        List<Client> clients = clientRepository.findAll();
+        return clientMapper.toResponseDTOList(clients);
     }
 
-    public Optional<Client> buscarPorId(Long id) {
-        return clientRepository.findById(id);
-    }
-
-    public Client atualizar(Long id, Client clientAtualizado) {
+    public Optional<ClientResponseDTO> findById(Long id) {
         return clientRepository.findById(id)
-                .map(client -> {
-                    client.setName(clientAtualizado.getName());
-                    client.setNumberPhone(clientAtualizado.getNumberPhone());
-                    client.setAddress(clientAtualizado.getAddress());
-                    client.setAddressNeighborhood(clientAtualizado.getAddressNeighborhood());
-                    client.setObservation(clientAtualizado.getObservation());
-                    if (clientAtualizado.getEstablishment() != null && clientAtualizado.getEstablishment().getId() != null) {
-                        Establishment est = establishmentRepository.findById(clientAtualizado.getEstablishment().getId())
-                                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
-                        client.setEstablishment(est);
-                    }
-                    return clientRepository.save(client);
-                })
-                .orElseThrow(() -> new ClienteNaoEncontradoException("Cliente não encontrado com id: " + id));
+        		.map(clientMapper::toResponseDTO);
     }
 
-    public void deletar(Long id) {
+    @Transactional
+    public ClientResponseDTO update(Long id, ClientRequestDTO clientRequestDTO) {
+        Client existingClient = clientRepository.findById(id)
+                .orElseThrow(() -> new ClienteNaoEncontradoException("Cliente não encontrado com id: " + id));
+        
+        clientMapper.updateEntityFromDTO(existingClient, clientRequestDTO);
+        Client updatedClient = clientRepository.save(existingClient);
+        return clientMapper.toResponseDTO(updatedClient);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+    	if (!clientRepository.existsById(id)) {
+            throw new ClienteNaoEncontradoException("Cliente não encontrado com id: " + id);
+        }
         clientRepository.deleteById(id);
     }
 }

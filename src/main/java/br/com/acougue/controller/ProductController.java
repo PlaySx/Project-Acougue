@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.acougue.entities.Products;
+import br.com.acougue.dto.ProductRequestDTO;
+import br.com.acougue.dto.ProductResponseDTO;
 import br.com.acougue.globalException.ProductNaoEncontradoException;
 import br.com.acougue.services.ProductService;
 
@@ -25,31 +26,32 @@ public class ProductController {
 	@Autowired
 	private ProductService productService;
 	
-	 @PostMapping
-	    public ResponseEntity<Products> salvar(@RequestBody Products product){
-	        Products salvo = productService.salvar(product);
-	        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-	    }
+	@PostMapping
+	public ResponseEntity<ProductResponseDTO> create(@RequestBody ProductRequestDTO productRequestDTO){
+		ProductResponseDTO created = productService.create(productRequestDTO);
+		return ResponseEntity.status(HttpStatus.CREATED).body(created);
+	}
 	 
-	 @GetMapping
-	    public List<Products> listarClient(){
-	        return productService.listarTodos();
-	    }
+	@GetMapping
+	public List<ProductResponseDTO> findAll(){
+		return productService.findAll();
+	}
 	 
-	 @GetMapping("/{id}")
-	    public ResponseEntity<Products> buscarPorId(@PathVariable Long id){
-	        return productService.buscarPorId(id)
-	                .map(ResponseEntity::ok)
-	                .orElseThrow(() -> new ProductNaoEncontradoException("Cliente não encontrado com id: " + id));
-	    }
+	@GetMapping("/{id}")
+	public ResponseEntity<ProductResponseDTO> findById(@PathVariable Long id){
+		return productService.findById(id)
+				.map(ResponseEntity::ok)
+				.orElseThrow(() -> new ProductNaoEncontradoException("Produto não encontrado com id: " + id));
+	}
 	 
-	 @PutMapping("/{id}")
-	    public Products atualizarClient(@PathVariable Long id, @RequestBody Products productAtualizado) {
-	        return productService.atualizar(id, productAtualizado);
-	    }
+	@PutMapping("/{id}")
+	public ProductResponseDTO update(@PathVariable Long id, @RequestBody ProductRequestDTO productRequestDTO) {
+		return productService.update(id, productRequestDTO);
+	}
 	 
-	 @DeleteMapping("/{id}")
-	    public void deletarProduct(@PathVariable Long id) {
-	        productService.deletar(id);
-	    }
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable Long id) {
+		productService.delete(id);
+		return ResponseEntity.noContent().build();
+	}
 }

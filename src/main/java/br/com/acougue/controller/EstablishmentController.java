@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.acougue.entities.Establishment;
+import br.com.acougue.dto.EstablishmentDTO;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
 import br.com.acougue.services.EstablishmentService;
 
@@ -26,31 +26,31 @@ public class EstablishmentController {
 	private EstablishmentService establishmentService;
 	
 	@PostMapping
-	public ResponseEntity<Establishment> salvar(@RequestBody Establishment establishment){
-		Establishment salvo = establishmentService.salvar(establishment);
-		return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+	public ResponseEntity<EstablishmentDTO> create(@RequestBody EstablishmentDTO establishmentDTO){
+		EstablishmentDTO created = establishmentService.create(establishmentDTO);
+		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 	
 	@GetMapping
-	public List<Establishment> listarEstabelecimento(){
+	public List<EstablishmentDTO> findAll(){
 		return establishmentService.findAll();
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Establishment> buscarPorId(@PathVariable Long id){
+	public ResponseEntity<EstablishmentDTO> findById(@PathVariable Long id){
 		return establishmentService.findById(id)
 				.map(ResponseEntity::ok)
-				.orElseThrow(() -> new EstablishmentNaoEncontradoException("Estabelecimento nao encontrado com o id: " + id));
+				.orElseThrow(() -> new EstablishmentNaoEncontradoException("Estabelecimento não encontrado com o id: " + id));
 	}
 	
 	@PutMapping("/{id}")
-	public Establishment atualizarEstabelecimento(@PathVariable Long id, @RequestBody Establishment estabelecimentoAtualizado) {
-		return establishmentService.update(id, estabelecimentoAtualizado);
+	public EstablishmentDTO update(@PathVariable Long id, @RequestBody EstablishmentDTO establishmentDTO) {
+		return establishmentService.update(id, establishmentDTO);
 	}
 	
 	@DeleteMapping("/{id}")
-	public void deletarEstablishment(@PathVariable Long id) {
-		establishmentService.deletar(id);
+	public ResponseEntity<Void> delete(@PathVariable Long id) {
+		establishmentService.delete(id);
+		return ResponseEntity.noContent().build();
 	}
-	
 }
