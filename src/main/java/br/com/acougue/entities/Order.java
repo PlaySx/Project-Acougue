@@ -24,47 +24,44 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "tb_order")
 public class Order {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	@Column(name = "order_date_time")
 	private LocalDateTime datahora;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "order_status")
 	private OrderStatus status = OrderStatus.PENDENTE;
-	
+
 	@Column(name = "payment_method")
 	private String paymentMethod;
-	
+
 	@Column(name = "order_observation")
 	private String observação;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "cliente_id")
 	private Client client;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "estabelecimento_id")
 	@JsonIgnore
 	private Establishment establishment;
-	
+
 	@ManyToMany
-	@JoinTable(
-			name = "order_product",
-			joinColumns = @JoinColumn(name = "order_id"),
-			inverseJoinColumns = @JoinColumn(name = "product_id")
-			
-			)
+	@JoinTable(name = "order_product", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "product_id")
+
+	)
 	@JsonIgnore
 	private List<Products> products = new ArrayList<>();
 
 	public Order() {
-		
+
 	}
-	
+
 	public Order(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod, String observação,
 			Client client, Establishment establishment, List<Products> products) {
 		super();
@@ -161,10 +158,5 @@ public class Order {
 				&& Objects.equals(observação, other.observação) && Objects.equals(paymentMethod, other.paymentMethod)
 				&& Objects.equals(products, other.products) && status == other.status;
 	}
-	
-	
-	
-	
+
 }
-
-

@@ -27,33 +27,33 @@ public class Client {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	@Column(name = "client_name")
 	private String name;
-	
+
 	@Column(name = "number_phone")
 	private Long numberPhone;
-	
+
 	@Column(name = "client_address")
 	private String address;
-	
+
 	@Column(name = "address_neighborhood")
 	private String addressNeighborhood;
-	
+
 	@Column(name = "client_observation")
 	private String Observation;
 	@ManyToMany
 	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore
 	private List<Products> products;
-	
+
 	@OneToMany(mappedBy = "client")
 	@JsonIgnore
 	private List<Order> orders = new ArrayList<>();
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "establishment_id")
-	@JsonIgnoreProperties({"clients", "products", "orders"})
+	@JsonIgnoreProperties({ "clients", "products", "orders" })
 	private Establishment establishment;
 
 	public Client() {
@@ -168,6 +168,4 @@ public class Client {
 				&& Objects.equals(orders, other.orders) && Objects.equals(products, other.products);
 	}
 
-	
-	
 }
