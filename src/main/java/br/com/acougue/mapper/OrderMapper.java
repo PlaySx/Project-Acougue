@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import br.com.acougue.dto.OrderRequestDTO;
 import br.com.acougue.dto.OrderResponseDTO;
@@ -16,6 +17,7 @@ import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.EstablishmentRepository;
 import br.com.acougue.repository.ProductsRepository;
 
+@Component
 public class OrderMapper {
 
 	@Autowired
