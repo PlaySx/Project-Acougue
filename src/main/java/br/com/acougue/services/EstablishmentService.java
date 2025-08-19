@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.acougue.dto.EstablishmentDTO;
 import br.com.acougue.dto.EstablishmentRegisterDTO;
 import br.com.acougue.dto.EstablishmentAuthResponseDTO;
-import br.com.acougue.dto.LoginDTO;
+
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
 import br.com.acougue.mapper.EstablishmentMapper;
