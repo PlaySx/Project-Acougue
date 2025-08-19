@@ -6,3 +6,15 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["sh", "-c", "/run"]
+
+[workflows]
+runButton = "Run Spring Boot"
+
+[[workflows.workflow]]
+name = "Run Spring Boot"
+author = 46649405
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"

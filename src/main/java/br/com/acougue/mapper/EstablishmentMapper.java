@@ -53,30 +53,7 @@ public class EstablishmentMapper {
         return dto;
     }
 
-    // ====================== SEUS MÉTODOS ORIGINAIS (MANTIDOS) ======================
     
-    public Establishment toEntity1(EstablishmentDTO dto) {
-        if(dto == null) return null;
-        Establishment establishment = new Establishment();
-        establishment.setName(dto.getName());
-        establishment.setCnpj(dto.getCnpj());
-        establishment.setAddress(dto.getAddress());
-        
-        return establishment;
-    }
-    
-    public EstablishmentDTO toDTO1(Establishment entity) {
-        if (entity == null) return null;
-        
-        return new EstablishmentDTO(
-            entity.getId(),
-            entity.getName(),
-            entity.getCnpj(),
-            entity.getAddress(),
-            entity.getClients() != null ? entity.getClients().size() : 0,
-            entity.getProducts() != null ? entity.getProducts().size() : 0,
-            entity.getOrders() != null ? entity.getOrders().size() : 0
-        );
     }
 
     public Establishment toEntity(EstablishmentDTO dto) {
