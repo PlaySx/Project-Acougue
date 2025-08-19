@@ -1,4 +1,6 @@
+
 package br.com.acougue.controller;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +28,18 @@ public class ClientController {
     private ClientService clientService;
 
     @PostMapping
-    public ResponseEntity<ClientResponseDTO> create(@RequestBody ClientRequestDTO clientRequestDTO){
+    public ResponseEntity<ClientResponseDTO> create(@RequestBody ClientRequestDTO clientRequestDTO) {
         ClientResponseDTO created = clientService.create(clientRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
-    public List<ClientResponseDTO> findAll(){
+    public List<ClientResponseDTO> findAll() {
         return clientService.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id){
+    public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
         return clientService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ClienteNaoEncontradoException("Cliente não encontrado com id: " + id));

@@ -15,92 +15,50 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.acougue.dto.EstablishmentDTO;
+import br.com.acougue.dto.EstablishmentRegisterDTO;
+import br.com.acougue.dto.EstablishmentAuthResponseDTO;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
 import br.com.acougue.services.EstablishmentService;
 
 @RestController
 @RequestMapping("/estabelecimento")
 public class EstablishmentController {
-	
-	@Autowired
-	private EstablishmentService establishmentService;
-	
-	/**
-	 * Cria um novo estabelecimento (sem autenticação)
-	 * Para estabelecimentos com login, use /auth/register
-	 */
-	@PostMapping
-	public ResponseEntity<EstablishmentDTO> create(@RequestBody EstablishmentDTO establishmentDTO){
-		try {
-			EstablishmentDTO created = establishmentService.create(establishmentDTO);
-			return ResponseEntity.status(HttpStatus.CREATED).body(created);
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
-	
-	/**
-	 * Lista todos os estabelecimentos
-	 */
-	@GetMapping
-	public ResponseEntity<List<EstablishmentDTO>> findAll(){
-		try {
-			List<EstablishmentDTO> establishments = establishmentService.findAll();
-			return ResponseEntity.ok(establishments);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
-	
-	/**
-	 * Busca estabelecimento por ID
-	 */
-	@GetMapping("/{id}")
-	public ResponseEntity<EstablishmentDTO> findById(@PathVariable Long id){
-		try {
-			return establishmentService.findById(id)
-					.map(ResponseEntity::ok)
-					.orElseThrow(() -> new EstablishmentNaoEncontradoException("Estabelecimento não encontrado com o id: " + id));
-		} catch (EstablishmentNaoEncontradoException e) {
-			throw e; // Deixa o GlobalExceptionHandler tratar
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
-	
-	/**
-	 * Atualiza estabelecimento (não atualiza username nem senha)
-	 */
-	@PutMapping("/{id}")
-	public ResponseEntity<EstablishmentDTO> update(@PathVariable Long id, @RequestBody EstablishmentDTO establishmentDTO) {
-		try {
-			EstablishmentDTO updated = establishmentService.update(id, establishmentDTO);
-			return ResponseEntity.ok(updated);
-		} catch (EstablishmentNaoEncontradoException e) {
-			throw e; // Deixa o GlobalExceptionHandler tratar
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
-	
-	/**
-	 * Deleta estabelecimento
-	 */
-	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> delete(@PathVariable Long id) {
-		try {
-			establishmentService.delete(id);
-			return ResponseEntity.noContent().build();
-		} catch (EstablishmentNaoEncontradoException e) {
-			throw e; // Deixa o GlobalExceptionHandler tratar
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
+
+    @Autowired
+    private EstablishmentService establishmentService;
+
+    @PostMapping("/register")
+    public ResponseEntity<EstablishmentAuthResponseDTO> register(@RequestBody EstablishmentRegisterDTO registerDTO) {
+        EstablishmentAuthResponseDTO created = establishmentService.registerWithAuth(registerDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping
+    public ResponseEntity<EstablishmentDTO> create(@RequestBody EstablishmentDTO establishmentDTO) {
+        EstablishmentDTO created = establishmentService.create(establishmentDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping
+    public List<EstablishmentDTO> findAll() {
+        return establishmentService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EstablishmentDTO> findById(@PathVariable Long id) {
+        return establishmentService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new EstablishmentNaoEncontradoException("Estabelecimento não encontrado com id: " + id));
+    }
+
+    @PutMapping("/{id}")
+    public EstablishmentDTO update(@PathVariable Long id, @RequestBody EstablishmentDTO establishmentDTO) {
+        return establishmentService.update(id, establishmentDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        establishmentService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
