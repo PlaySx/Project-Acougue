@@ -1,3 +1,4 @@
+
 package br.com.acougue.mapper;
 
 import java.util.List;
@@ -5,9 +6,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import br.com.acougue.dto.EstablishmentAuthResponseDTO;
 import br.com.acougue.dto.EstablishmentDTO;
 import br.com.acougue.dto.EstablishmentRegisterDTO;
-import br.com.acougue.dto.EstablishmentAuthResponseDTO;
 import br.com.acougue.entities.Establishment;
 
 @Component
@@ -53,9 +54,9 @@ public class EstablishmentMapper {
         return dto;
     }
 
+    // ====================== MÉTODOS PARA CRUD NORMAL ======================
     
-    }
-
+    // Converte DTO para entidade (sem dados de autenticação)
     public Establishment toEntity(EstablishmentDTO dto) {
         if (dto == null) return null;
         
@@ -98,7 +99,5 @@ public class EstablishmentMapper {
         return entities.stream()
             .map(this::toDTO)
             .collect(Collectors.toList());
-    }
-}
     }
 }
