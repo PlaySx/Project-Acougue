@@ -119,7 +119,7 @@ public class EstablishmentMapper {
         if (entities == null) return null;
         
         return entities.stream()
-            .map(this::toDTO1)
+            .map(this::toDTO)
             .collect(Collectors.toList());
     }
 }

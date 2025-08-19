@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.acougue.dto.EstablishmentDTO;
 import br.com.acougue.dto.EstablishmentRegisterDTO;
 import br.com.acougue.dto.EstablishmentAuthResponseDTO;
+import br.com.acougue.dto.LoginDTO;
 
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
@@ -48,7 +49,7 @@ public class EstablishmentService {
 
         // Verificar se username já existe
         if (establishmentRepository.existsByUsername(registerDTO.getUsername())) {
-            throw new RuntimeException("Username '" + registerDTO.getUsername() + "' já existe");
+            throw new IllegalArgumentException("Username '" + registerDTO.getUsername() + "' já existe");
         }
 
         // Converter DTO para entidade
@@ -79,11 +80,11 @@ public class EstablishmentService {
 
         // Buscar estabelecimento por username
         Establishment establishment = establishmentRepository.findByUsername(loginDTO.getUsername())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
         // Validar senha
         if (!passwordEncoder.matches(loginDTO.getPassword(), establishment.getPassword())) {
-            throw new RuntimeException("Senha inválida");
+            throw new IllegalArgumentException("Senha inválida");
         }
 
         // Retornar dados seguros (sem senha)
