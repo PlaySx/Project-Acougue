@@ -100,3 +100,5 @@ public class EstablishmentMapper {
             .collect(Collectors.toList());
     }
 }
+    }
+}
