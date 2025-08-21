@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -12,7 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import br.com.acougue.services.CustomUserDetailsService;
 
@@ -22,7 +24,7 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-    
+
     @Autowired
     private Environment environment;
 
@@ -45,50 +47,52 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
+        
+        // Crie o MvcRequestMatcher.Builder aqui
+        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector);
+
+        // registra o authentication provider
+        http.authenticationProvider(authenticationProvider());
+
         http
-            .csrf(csrf -> csrf
-                .disable()
-            )
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Versão atualizada
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                // H2 Console (apenas para desenvolvimento)
+                // H2 console em dev. Use o mvcMatcherBuilder
                 if (isDevelopment()) {
-                    auth.requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll();
+                    auth.requestMatchers(mvcMatcherBuilder.pattern("/h2-console/**")).permitAll();
                 }
-                
+
+                // Endpoints públicos (colocar os mais específicos antes dos genéricos)
                 auth
-                    // Endpoints públicos
-                    .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/users/register")).permitAll()
+                    // Use mvcMatcherBuilder para os endpoints Spring MVC
+                    .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/actuator/health")).permitAll()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/v3/api-docs/**")).permitAll()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/swagger-ui/**")).permitAll()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/users/register")).permitAll()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/auth/**")).permitAll()
                     
-                    // Endpoints protegidos - requer autenticação
-                    .requestMatchers(new AntPathRequestMatcher("/users/**")).authenticated()
-                    .requestMatchers(new AntPathRequestMatcher("/estabelecimento/**")).authenticated()
-                    .requestMatchers(new AntPathRequestMatcher("/clients/**")).authenticated()
-                    .requestMatchers(new AntPathRequestMatcher("/products/**")).authenticated()
-                    .requestMatchers(new AntPathRequestMatcher("/orders/**")).authenticated()
-                    .requestMatchers(new AntPathRequestMatcher("/dashboard/**")).authenticated()
+                    // demais endpoints protegidos
+                    .requestMatchers(mvcMatcherBuilder.pattern("/users/**")).authenticated()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/estabelecimento/**")).authenticated()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/clients/**")).authenticated()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/products/**")).authenticated()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/orders/**")).authenticated()
+                    .requestMatchers(mvcMatcherBuilder.pattern("/dashboard/**")).authenticated()
                     
-                    // Qualquer outra requisição requer autenticação
                     .anyRequest().authenticated();
             });
-            // TODO: Adicionar JWT filter quando implementar JWT
 
+        // TODO: se adicionar filtro JWT, adicione .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
         return http.build();
     }
     
-    /**
-     * Verifica se está em ambiente de desenvolvimento
-     */
     private boolean isDevelopment() {
         String[] profiles = environment.getActiveProfiles();
-        return profiles.length == 0 || // Profile padrão
+        return profiles.length == 0 ||
                java.util.Arrays.asList(profiles).contains("dev") ||
                java.util.Arrays.asList(profiles).contains("development") ||
                java.util.Arrays.asList(profiles).contains("local");
