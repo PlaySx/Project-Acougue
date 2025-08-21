@@ -14,9 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.acougue.dto.EstablishmentCreateRequestDTO;
 import br.com.acougue.dto.EstablishmentDTO;
-import br.com.acougue.dto.EstablishmentRegisterDTO;
-import br.com.acougue.dto.EstablishmentAuthResponseDTO;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
 import br.com.acougue.services.EstablishmentService;
 
@@ -27,10 +26,17 @@ public class EstablishmentController {
     @Autowired
     private EstablishmentService establishmentService;
 
-    @PostMapping("/register")
-    public ResponseEntity<EstablishmentAuthResponseDTO> register(@RequestBody EstablishmentRegisterDTO registerDTO) {
-        EstablishmentAuthResponseDTO created = establishmentService.registerWithAuth(registerDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    // ✅ NOVO: Criar establishment para um usuário específico
+    @PostMapping("/create-for-user/{userId}")
+    public ResponseEntity<EstablishmentDTO> createForUser(
+            @PathVariable Long userId, 
+            @RequestBody EstablishmentCreateRequestDTO requestDTO) {
+        try {
+            EstablishmentDTO created = establishmentService.createForUser(userId, requestDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping
@@ -49,6 +55,11 @@ public class EstablishmentController {
         return establishmentService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new EstablishmentNaoEncontradoException("Estabelecimento não encontrado com id: " + id));
+    }
+
+    @GetMapping("/by-user/{userId}")
+    public List<EstablishmentDTO> findByUserId(@PathVariable Long userId) {
+        return establishmentService.findByUserId(userId);
     }
 
     @PutMapping("/{id}")

@@ -26,7 +26,7 @@ public class EstablishmentMapper {
         }
         
         Establishment establishment = new Establishment();
-        establishment.setUsername(registerDTO.getUsername());
+        establishment.setName(registerDTO.getUsername());
         // password será setada no Service após criptografia
         establishment.setName(registerDTO.getName());
         establishment.setCnpj(registerDTO.getCnpj());
@@ -46,7 +46,7 @@ public class EstablishmentMapper {
         
         EstablishmentAuthResponseDTO dto = new EstablishmentAuthResponseDTO();
         dto.setId(establishment.getId());
-        dto.setUsername(establishment.getUsername());
+        dto.setUsername(establishment.getName());
         dto.setName(establishment.getName());
         dto.setCnpj(establishment.getCnpj());
         dto.setAddress(establishment.getAddress());

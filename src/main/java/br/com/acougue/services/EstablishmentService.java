@@ -4,19 +4,20 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.acougue.dto.EstablishmentDTO;
 import br.com.acougue.dto.EstablishmentRegisterDTO;
 import br.com.acougue.dto.EstablishmentAuthResponseDTO;
-import br.com.acougue.dto.LoginDTO;
-
+import br.com.acougue.dto.EstablishmentCreateRequestDTO;
 import br.com.acougue.entities.Establishment;
+import br.com.acougue.entities.User;
 import br.com.acougue.globalException.EstablishmentNaoEncontradoException;
 import br.com.acougue.mapper.EstablishmentMapper;
 import br.com.acougue.repository.EstablishmentRepository;
+import br.com.acougue.repository.UserRepository;
 
 @Service
 public class EstablishmentService {
@@ -25,12 +26,17 @@ public class EstablishmentService {
     private EstablishmentRepository establishmentRepository;
 
     @Autowired
-    private EstablishmentMapper establishmentMapper;
+    private UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
+    private EstablishmentMapper establishmentMapper;
     
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * ✅ IMPLEMENTADO: Registra estabelecimento com autenticação
+     */
     @Transactional
     public EstablishmentAuthResponseDTO registerWithAuth(EstablishmentRegisterDTO registerDTO) {
         // Validações básicas
@@ -44,7 +50,7 @@ public class EstablishmentService {
             throw new IllegalArgumentException("Senha é obrigatória");
         }
         if (registerDTO.getName() == null || registerDTO.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome é obrigatório");
+            throw new IllegalArgumentException("Nome do estabelecimento é obrigatório");
         }
 
         // Verificar se username já existe
@@ -52,60 +58,80 @@ public class EstablishmentService {
             throw new IllegalArgumentException("Username '" + registerDTO.getUsername() + "' já existe");
         }
 
-        // Converter DTO para entidade
-        Establishment establishment = establishmentMapper.toEntityFromRegisterDTO(registerDTO);
-        
-        // Criptografar e setar senha
+        // Criar estabelecimento
+        Establishment establishment = new Establishment();
+        establishment.setName(registerDTO.getName());
+        establishment.setCnpj(registerDTO.getCnpj());
+        establishment.setAddress(registerDTO.getAddress());
+        establishment.setUsername(registerDTO.getUsername());
         establishment.setPassword(passwordEncoder.encode(registerDTO.getPassword()));
+        establishment.setRole("ROLE_ESTABLISHMENT");
 
-        // Salvar no banco
+        // Salvar estabelecimento
         Establishment savedEstablishment = establishmentRepository.save(establishment);
 
-        // Retornar DTO seguro (sem senha)
-        return establishmentMapper.toAuthResponseDTO(savedEstablishment);
+        // Retornar resposta de autenticação
+        return new EstablishmentAuthResponseDTO(
+            savedEstablishment.getId(),
+            savedEstablishment.getUsername(),
+            savedEstablishment.getName(),
+            savedEstablishment.getCnpj(),
+            savedEstablishment.getAddress()
+        );
     }
 
-    
-    public EstablishmentAuthResponseDTO validateLogin(LoginDTO loginDTO) {
-        // Validações básicas
-        if (loginDTO == null) {
-            throw new IllegalArgumentException("Dados de login não podem ser nulos");
-        }
-        if (loginDTO.getUsername() == null || loginDTO.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username é obrigatório");
-        }
-        if (loginDTO.getPassword() == null || loginDTO.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Senha é obrigatória");
+    /**
+     * ✅ NOVO: Cria estabelecimento para um usuário específico
+     */
+    @Transactional
+    public EstablishmentDTO createForUser(Long userId, EstablishmentCreateRequestDTO requestDTO) {
+        if (userId == null || requestDTO == null) {
+            throw new IllegalArgumentException("User ID e dados não podem ser nulos");
         }
 
-        // Buscar estabelecimento por username
-        Establishment establishment = establishmentRepository.findByUsername(loginDTO.getUsername())
+        // Buscar usuário
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + userId));
+
+        // Verificar se usuário já tem estabelecimento (se regra de negócio for 1:1)
+        if (user.getEstablishment() != null) {
+            throw new IllegalArgumentException("Usuário já possui um estabelecimento");
+        }
+
+        // Criar estabelecimento
+        Establishment establishment = new Establishment();
+        establishment.setName(requestDTO.getName());
+        establishment.setCnpj(requestDTO.getCnpj());
+        establishment.setAddress(requestDTO.getAddress());
+
+        // Salvar estabelecimento
+        Establishment savedEstablishment = establishmentRepository.save(establishment);
+
+        // Associar usuário ao estabelecimento
+        user.setEstablishment(savedEstablishment);
+        userRepository.save(user);
+
+        return establishmentMapper.toDTO(savedEstablishment);
+    }
+
+    /**
+     * ✅ NOVO: Busca estabelecimentos de um usuário
+     */
+    public List<EstablishmentDTO> findByUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID não pode ser nulo");
+        }
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-        // Validar senha
-        if (!passwordEncoder.matches(loginDTO.getPassword(), establishment.getPassword())) {
-            throw new IllegalArgumentException("Senha inválida");
+        if (user.getEstablishment() != null) {
+            return List.of(establishmentMapper.toDTO(user.getEstablishment()));
         }
-
-        // Retornar dados seguros (sem senha)
-        return establishmentMapper.toAuthResponseDTO(establishment);
+        
+        return List.of(); // Lista vazia se não tem estabelecimento
     }
 
-    public Optional<Establishment> findByUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return Optional.empty();
-        }
-        return establishmentRepository.findByUsername(username);
-    }
-    
-    public boolean isUsernameAvailable(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return false;
-        }
-        return !establishmentRepository.existsByUsername(username);
-    }
-
-   
     @Transactional
     public EstablishmentDTO create(EstablishmentDTO establishmentDTO) {
         if (establishmentDTO == null) {
@@ -117,17 +143,11 @@ public class EstablishmentService {
         return establishmentMapper.toDTO(savedEstablishment);
     }
 
-    /**
-     * Lista todos os estabelecimentos
-     */
     public List<EstablishmentDTO> findAll() {
         List<Establishment> establishments = establishmentRepository.findAll();
         return establishmentMapper.toDTOList(establishments);
     }
 
-    /**
-     * Busca estabelecimento por ID e retorna DTO com contadores
-     */
     public Optional<EstablishmentDTO> findById(Long id) {
         if (id == null) {
             return Optional.empty();
@@ -136,9 +156,6 @@ public class EstablishmentService {
                 .map(establishmentMapper::toDTO);
     }
 
-    /**
-     * Atualiza estabelecimento (não atualiza username nem senha)
-     */
     @Transactional
     public EstablishmentDTO update(Long id, EstablishmentDTO establishmentDTO) {
         if (id == null || establishmentDTO == null) {
@@ -153,9 +170,6 @@ public class EstablishmentService {
         return establishmentMapper.toDTO(updatedEstablishment);
     }
 
-    /**
-     * Deleta estabelecimento
-     */
     @Transactional
     public void delete(Long id) {
         if (id == null) {

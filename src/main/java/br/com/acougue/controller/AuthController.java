@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.acougue.dto.EstablishmentAuthResponseDTO;
 import br.com.acougue.dto.EstablishmentRegisterDTO;
 import br.com.acougue.dto.LoginDTO;
+import br.com.acougue.dto.UserAuthResponseDTO;
 import br.com.acougue.services.EstablishmentService;
+import br.com.acougue.services.UserService;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,6 +21,9 @@ public class AuthController {
 
     @Autowired
     private EstablishmentService establishmentService;
+    
+    @Autowired
+    private UserService userService;
 
     /**
      * Endpoint para registro de estabelecimento com autenticação
@@ -36,12 +41,12 @@ public class AuthController {
     }
 
     /**
-     * Endpoint para login de estabelecimento
+     * Endpoint para login de Usuario
      */
     @PostMapping("/login")
-    public ResponseEntity<EstablishmentAuthResponseDTO> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<UserAuthResponseDTO> login(@RequestBody LoginDTO loginDTO) {
         try {
-            EstablishmentAuthResponseDTO response = establishmentService.validateLogin(loginDTO);
+        	UserAuthResponseDTO response = userService.validateLogin(loginDTO);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
