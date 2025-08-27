@@ -10,6 +10,7 @@ import br.com.acougue.dto.UserRegisterDTO;
 import br.com.acougue.dto.UserAuthResponseDTO;
 import br.com.acougue.entities.User;
 import br.com.acougue.entities.Establishment;
+import br.com.acougue.enums.Role;
 
 @Component
 public class UserMapper {
@@ -31,7 +32,7 @@ public class UserMapper {
         
         // Converter string role para enum
         if (registerDTO.getRole() != null) {
-            user.setRole(User.Role.valueOf(registerDTO.getRole()));
+            user.setRole(Role.valueOf(registerDTO.getRole()));
         }
         
         // establishmentId será resolvido no Service
@@ -93,7 +94,7 @@ public class UserMapper {
         
         // Converter string role para enum
         if (dto.getRole() != null) {
-            user.setRole(User.Role.valueOf(dto.getRole()));
+            user.setRole(Role.valueOf(dto.getRole()));
         }
         
         // establishmentId será resolvido no Service se necessário
@@ -110,7 +111,7 @@ public class UserMapper {
         
         // Apenas campos editáveis (não username nem password)
         if (dto.getRole() != null) {
-            entity.setRole(User.Role.valueOf(dto.getRole()));
+            entity.setRole(Role.valueOf(dto.getRole()));
         }
         
         // establishmentId será tratado no Service se necessário
@@ -158,7 +159,7 @@ public class UserMapper {
         User employee = new User();
         employee.setUsername(username);
         employee.setPassword(password); // Será criptografada no Service
-        employee.setRole(User.Role.ROLE_EMPLOYEE);
+        employee.setRole(Role.ROLE_EMPLOYEE);
         employee.setEstablishment(establishment);
         return employee;
     }
@@ -170,7 +171,7 @@ public class UserMapper {
         User owner = new User();
         owner.setUsername(username);
         owner.setPassword(password); // Será criptografada no Service
-        owner.setRole(User.Role.ROLE_OWNER);
+        owner.setRole(Role.ROLE_OWNER);
         owner.setEstablishment(establishment);
         return owner;
     }

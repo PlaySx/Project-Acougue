@@ -52,7 +52,7 @@ public class Establishment {
 
 	@OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
 	@JsonIgnore
-	private List<Products> products = new ArrayList<>();
+	private List<Product> products = new ArrayList<>(); // Changed from Products
 
 	@OneToMany(mappedBy = "establishment")
 	@JsonIgnore
@@ -150,11 +150,11 @@ public class Establishment {
         this.clients = clients; 
     }
 
-    public List<Products> getProducts() { 
+    public List<Product> getProducts() { // Changed from Products
         return products; 
     }
     
-    public void setProducts(List<Products> products) { 
+    public void setProducts(List<Product> products) { // Changed from Products
         this.products = products; 
     }
 

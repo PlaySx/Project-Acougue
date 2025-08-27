@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import br.com.acougue.entities.User;
+import br.com.acougue.enums.Role;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -25,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Conta usuários por uma função específica, como 'ROLE_EMPLOYEE' ou 'ROLE_OWNER'
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role")
-    Long countByRole(@Param("role") User.Role role);
+    Long countByRole(@Param("role") Role role);
     
     // Conta número de funcionários de um estabelecimento
     @Query("SELECT COUNT(u) FROM User u WHERE u.establishment.id = :establishmentId AND u.role = 'ROLE_EMPLOYEE'")
@@ -39,8 +40,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByEstablishmentId(Long establishmentId);
     
     // Busca usuários por estabelecimento e role
-    List<User> findByEstablishmentIdAndRole(Long establishmentId, User.Role role);
+    List<User> findByEstablishmentIdAndRole(Long establishmentId, Role role);
     
     // Busca usuários por role
-    List<User> findByRole(User.Role role);
+    List<User> findByRole(Role role);
 }

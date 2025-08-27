@@ -1,23 +1,22 @@
 package br.com.acougue.entities;
 
+import br.com.acougue.enums.Role;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
 
+    @Serial
     private static final long serialVersionUID = 1L;
-    
-    public enum Role {
-        ROLE_OWNER,
-        ROLE_EMPLOYEE
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +43,14 @@ public class User implements UserDetails {
         this.username = username;
         this.password = password;
         this.role = role;
+    }
+
+    public User(Long id, String username, String password, Role role, Establishment establishment) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.establishment = establishment;
     }
 
     // Getters e Setters
@@ -113,5 +120,27 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() { 
         return true; 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", role=" + role +
+                '}';
     }
 }

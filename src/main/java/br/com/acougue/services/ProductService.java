@@ -9,15 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.acougue.dto.ProductRequestDTO;
 import br.com.acougue.dto.ProductResponseDTO;
-import br.com.acougue.entities.Products;
+import br.com.acougue.entities.Product;
 import br.com.acougue.mapper.ProductMapper;
-import br.com.acougue.repository.ProductsRepository;
+import br.com.acougue.repository.ProductRepository;
 
 @Service
 public class ProductService {
 
     @Autowired
-    private ProductsRepository productsRepository;
+    private ProductRepository productRepository;
 
     @Autowired
     private ProductMapper productMapper;
@@ -39,13 +39,13 @@ public class ProductService {
             throw new IllegalArgumentException("ID do estabelecimento é obrigatório");
         }
 
-        Products product = productMapper.toEntity(requestDTO);
-        Products savedProduct = productsRepository.save(product);
+        Product product = productMapper.toEntity(requestDTO);
+        Product savedProduct = productRepository.save(product);
         return productMapper.toResponseDTO(savedProduct);
     }
 
     public List<ProductResponseDTO> findAll() {
-        List<Products> products = productsRepository.findAll();
+        List<Product> products = productRepository.findAll();
         return productMapper.toResponseDTOList(products);
     }
 
@@ -54,14 +54,14 @@ public class ProductService {
             throw new IllegalArgumentException("ID do estabelecimento não pode ser nulo");
         }
         
-        List<Products> products = productsRepository.findByEstablishmentId(establishmentId);
+        List<Product> products = productRepository.findByEstablishmentId(establishmentId);
         return productMapper.toResponseDTOList(products);
     }
 
     public Optional<ProductResponseDTO> findById(Long id) {
         if (id == null) return Optional.empty();
         
-        return productsRepository.findById(id)
+        return productRepository.findById(id)
                 .map(productMapper::toResponseDTO);
     }
 
@@ -70,7 +70,7 @@ public class ProductService {
             return findByEstablishmentId(establishmentId);
         }
         
-        List<Products> products = productsRepository.findByNameContainingIgnoreCaseAndEstablishmentId(name, establishmentId);
+        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndEstablishmentId(name, establishmentId);
         return productMapper.toResponseDTOList(products);
     }
 
@@ -79,7 +79,7 @@ public class ProductService {
             throw new IllegalArgumentException("ID do estabelecimento não pode ser nulo");
         }
         
-        List<Products> products = productsRepository.findByValueBetweenAndEstablishmentId(minValue, maxValue, establishmentId);
+        List<Product> products = productRepository.findByValueBetweenAndEstablishmentId(minValue, maxValue, establishmentId);
         return productMapper.toResponseDTOList(products);
     }
 
@@ -89,11 +89,11 @@ public class ProductService {
             throw new IllegalArgumentException("ID e DTO não podem ser nulos");
         }
 
-        Products existingProduct = productsRepository.findById(id)
+        Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado com id: " + id));
 
         productMapper.updateEntityFromDTO(existingProduct, requestDTO);
-        Products updatedProduct = productsRepository.save(existingProduct);
+        Product updatedProduct = productRepository.save(existingProduct);
         return productMapper.toResponseDTO(updatedProduct);
     }
 
@@ -103,10 +103,10 @@ public class ProductService {
             throw new IllegalArgumentException("ID não pode ser nulo");
         }
         
-        if (!productsRepository.existsById(id)) {
+        if (!productRepository.existsById(id)) {
             throw new IllegalArgumentException("Produto não encontrado com id: " + id);
         }
         
-        productsRepository.deleteById(id);
+        productRepository.deleteById(id);
     }
 }

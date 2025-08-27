@@ -41,11 +41,12 @@ public class Client {
 	private String addressNeighborhood;
 
 	@Column(name = "client_observation")
-	private String Observation;
+	private String observation; // Renamed from Observation
+
 	@ManyToMany
 	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore
-	private List<Products> products;
+	private List<Product> products; // Changed from Products
 
 	@OneToMany(mappedBy = "client")
 	@JsonIgnore
@@ -61,14 +62,14 @@ public class Client {
 	}
 
 	public Client(Long id, String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, List<Products> products, List<Order> orders, Establishment establishment) {
+			String observation, List<Product> products, List<Order> orders, Establishment establishment) { // Changed from Products
 		super();
 		this.id = id;
 		this.name = name;
 		this.numberPhone = numberPhone;
 		this.address = address;
 		this.addressNeighborhood = addressNeighborhood;
-		Observation = observation;
+		this.observation = observation; // Corrected assignment
 		this.products = products;
 		this.orders = orders;
 		this.establishment = establishment;
@@ -115,18 +116,18 @@ public class Client {
 	}
 
 	public String getObservation() {
-		return Observation;
+		return observation;
 	}
 
 	public void setObservation(String observation) {
-		Observation = observation;
+		this.observation = observation;
 	}
 
-	public List<Products> getProducts() {
+	public List<Product> getProducts() { // Changed from Products
 		return products;
 	}
 
-	public void setProducts(List<Products> products) {
+	public void setProducts(List<Product> products) { // Changed from Products
 		this.products = products;
 	}
 
@@ -148,8 +149,7 @@ public class Client {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(Observation, address, addressNeighborhood, establishment, id, name, numberPhone, orders,
-				products);
+		return Objects.hash(id);
 	}
 
 	@Override
@@ -161,11 +161,15 @@ public class Client {
 		if (getClass() != obj.getClass())
 			return false;
 		Client other = (Client) obj;
-		return Objects.equals(Observation, other.Observation) && Objects.equals(address, other.address)
-				&& Objects.equals(addressNeighborhood, other.addressNeighborhood)
-				&& Objects.equals(establishment, other.establishment) && Objects.equals(id, other.id)
-				&& Objects.equals(name, other.name) && Objects.equals(numberPhone, other.numberPhone)
-				&& Objects.equals(orders, other.orders) && Objects.equals(products, other.products);
+		return Objects.equals(id, other.id);
 	}
 
+    @Override
+    public String toString() {
+        return "Client{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", numberPhone=" + numberPhone +
+                '}';
+    }
 }

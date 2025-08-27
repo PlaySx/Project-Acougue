@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import br.com.acougue.dto.ProductRequestDTO;
 import br.com.acougue.dto.ProductResponseDTO;
 import br.com.acougue.entities.Establishment;
-import br.com.acougue.entities.Products;
+import br.com.acougue.entities.Product;
 import br.com.acougue.repository.EstablishmentRepository;
 
 @Component
@@ -19,10 +19,10 @@ public class ProductMapper {
     private EstablishmentRepository establishmentRepository;
     
     // Converte DTO de request para entidade
-    public Products toEntity(ProductRequestDTO dto) {
+    public Product toEntity(ProductRequestDTO dto) {
         if (dto == null) return null;
         
-        Products product = new Products();
+        Product product = new Product();
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setValue(dto.getValue());
@@ -38,7 +38,7 @@ public class ProductMapper {
     }
     
     // Converte entidade para DTO de response
-    public ProductResponseDTO toResponseDTO(Products entity) {
+    public ProductResponseDTO toResponseDTO(Product entity) {
         if (entity == null) return null;
         
         return new ProductResponseDTO(
@@ -51,7 +51,7 @@ public class ProductMapper {
     }
     
     // Atualiza entidade existente com dados do DTO
-    public void updateEntityFromDTO(Products entity, ProductRequestDTO dto) {
+    public void updateEntityFromDTO(Product entity, ProductRequestDTO dto) {
         if (entity == null || dto == null) return;
         
         entity.setName(dto.getName());
@@ -66,7 +66,7 @@ public class ProductMapper {
     }
     
     // Converte lista de entidades para lista de DTOs de response
-    public List<ProductResponseDTO> toResponseDTOList(List<Products> entities) {
+    public List<ProductResponseDTO> toResponseDTOList(List<Product> entities) {
         if (entities == null) return null;
         
         return entities.stream()

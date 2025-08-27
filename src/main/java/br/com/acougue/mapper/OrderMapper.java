@@ -12,10 +12,10 @@ import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.entities.Client;
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.entities.Order;
-import br.com.acougue.entities.Products;
+import br.com.acougue.entities.Product; // Changed from Products
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.EstablishmentRepository;
-import br.com.acougue.repository.ProductsRepository;
+import br.com.acougue.repository.ProductRepository; // Changed from ProductsRepository
 
 @Component
 public class OrderMapper {
@@ -27,7 +27,7 @@ public class OrderMapper {
 	private EstablishmentRepository establishmentRepository;
 
 	@Autowired
-	private ProductsRepository productsRepository;
+	private ProductRepository productRepository; // Changed from productsRepository
 
 	@Autowired
 	private ProductMapper productMapper;
@@ -40,7 +40,7 @@ public class OrderMapper {
 		Order order = new Order();
 		order.setDatahora(dto.getDatahora());
 		order.setPaymentMethod(dto.getPaymentMethod());
-		order.setObservação(dto.getObservacao());
+		order.setObservation(dto.getObservacao()); // Changed from setObservação
 
 		// Busca o cliente pelo ID
 		if (dto.getClientId() != null) {
@@ -58,9 +58,9 @@ public class OrderMapper {
 
 		// Busca os produtos pelos IDs
 		if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-			List<Products> products = new ArrayList<>();
+			List<Product> products = new ArrayList<>(); // Changed from Products
 			for (Long productId : dto.getProductIds()) {
-				Products product = productsRepository.findById(productId)
+				Product product = productRepository.findById(productId) // Changed from Products
 						.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 				products.add(product);
 			}
@@ -83,7 +83,7 @@ public class OrderMapper {
 		}
 
 		return new OrderResponseDTO(entity.getId(), entity.getDatahora(), entity.getStatus(), entity.getPaymentMethod(),
-				entity.getObservação(), entity.getClient() != null ? entity.getClient().getName() : null,
+				entity.getObservation(), entity.getClient() != null ? entity.getClient().getName() : null, // Changed from getObservação
 				entity.getEstablishment() != null ? entity.getEstablishment().getName() : null,
 				entity.getProducts() != null ? productMapper.toResponseDTOList(entity.getProducts()) : null,
 				totalValue);
@@ -96,7 +96,7 @@ public class OrderMapper {
 
 		entity.setDatahora(dto.getDatahora());
 		entity.setPaymentMethod(dto.getPaymentMethod());
-		entity.setObservação(dto.getObservacao());
+		entity.setObservation(dto.getObservacao()); // Changed from setObservação
 
 		if (dto.getClientId() != null) {
 			Client client = clientRepository.findById(dto.getClientId())
@@ -111,9 +111,9 @@ public class OrderMapper {
 		}
 
 		if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-			List<Products> products = new ArrayList<>();
+			List<Product> products = new ArrayList<>(); // Changed from Products
 			for (Long productId : dto.getProductIds()) {
-				Products product = productsRepository.findById(productId)
+				Product product = productRepository.findById(productId) // Changed from Products
 						.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 				products.add(product);
 			}

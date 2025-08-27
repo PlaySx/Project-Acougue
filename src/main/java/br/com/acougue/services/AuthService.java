@@ -3,6 +3,7 @@ package br.com.acougue.services;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,20 +32,20 @@ public class AuthService {
      */
     public UserAuthResponseDTO authenticateUser(LoginDTO loginDTO) {
         if (loginDTO == null || loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
-            throw new IllegalArgumentException("Dados de login inválidos");
+            throw new BadCredentialsException("Dados de login inválidos");
         }
 
         Optional<User> userOpt = userRepository.findByUsername(loginDTO.getUsername());
         
         if (userOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuário não encontrado");
+            throw new BadCredentialsException("Credenciais inválidas"); // Mensagem genérica por segurança
         }
         
         User user = userOpt.get();
 
         // Validar senha
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Senha inválida");
+            throw new BadCredentialsException("Credenciais inválidas"); // Mensagem genérica por segurança
         }
         
         // Retornar dados seguros
@@ -62,20 +63,20 @@ public class AuthService {
      */
     public EstablishmentAuthResponseDTO authenticateEstablishment(LoginDTO loginDTO) {
         if (loginDTO == null || loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
-            throw new IllegalArgumentException("Dados de login inválidos");
+            throw new BadCredentialsException("Dados de login inválidos");
         }
         
         Optional<Establishment> establishmentOpt = establishmentRepository.findByUsername(loginDTO.getUsername());
         
         if (establishmentOpt.isEmpty()) {
-            throw new IllegalArgumentException("Estabelecimento não encontrado");
+            throw new BadCredentialsException("Credenciais inválidas"); // Mensagem genérica por segurança
         }
         
         Establishment establishment = establishmentOpt.get();
 
         // Validar senha
         if (!passwordEncoder.matches(loginDTO.getPassword(), establishment.getPassword())) {
-            throw new IllegalArgumentException("Senha inválida");
+            throw new BadCredentialsException("Credenciais inválidas"); // Mensagem genérica por segurança
         }
 
         return new EstablishmentAuthResponseDTO(
@@ -94,12 +95,12 @@ public class AuthService {
         try {
             // Primeiro tenta autenticar como User
             return authenticateUser(loginDTO);
-        } catch (IllegalArgumentException e) {
+        } catch (BadCredentialsException e) {
             // Se falhar, tenta como Establishment
             try {
                 return authenticateEstablishment(loginDTO);
-            } catch (IllegalArgumentException e2) {
-                throw new IllegalArgumentException("Credenciais inválidas");
+            } catch (BadCredentialsException e2) {
+                throw new BadCredentialsException("Credenciais inválidas");
             }
         }
     }

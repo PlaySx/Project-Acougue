@@ -40,7 +40,7 @@ public class Order {
 	private String paymentMethod;
 
 	@Column(name = "order_observation")
-	private String observação;
+	private String observation; // Renamed from observação
 
 	@ManyToOne
 	@JoinColumn(name = "cliente_id")
@@ -52,24 +52,22 @@ public class Order {
 	private Establishment establishment;
 
 	@ManyToMany
-	@JoinTable(name = "order_product", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "product_id")
-
-	)
+	@JoinTable(name = "order_product", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore
-	private List<Products> products = new ArrayList<>();
+	private List<Product> products = new ArrayList<>(); // Changed from Products
 
 	public Order() {
 
 	}
 
-	public Order(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod, String observação,
-			Client client, Establishment establishment, List<Products> products) {
+	public Order(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod, String observation,
+			Client client, Establishment establishment, List<Product> products) { // Changed from Products
 		super();
 		this.id = id;
 		this.datahora = datahora;
 		this.status = status;
 		this.paymentMethod = paymentMethod;
-		this.observação = observação;
+		this.observation = observation;
 		this.client = client;
 		this.establishment = establishment;
 		this.products = products;
@@ -107,12 +105,12 @@ public class Order {
 		this.paymentMethod = paymentMethod;
 	}
 
-	public String getObservação() {
-		return observação;
+	public String getObservation() { // Renamed from getObservação
+		return observation;
 	}
 
-	public void setObservação(String observação) {
-		this.observação = observação;
+	public void setObservation(String observation) { // Renamed from setObservação
+		this.observation = observation;
 	}
 
 	public Client getClient() {
@@ -131,17 +129,17 @@ public class Order {
 		this.establishment = establishment;
 	}
 
-	public List<Products> getProducts() {
+	public List<Product> getProducts() { // Changed from Products
 		return products;
 	}
 
-	public void setProducts(List<Products> products) {
+	public void setProducts(List<Product> products) { // Changed from Products
 		this.products = products;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(client, datahora, establishment, id, observação, paymentMethod, products, status);
+		return Objects.hash(id);
 	}
 
 	@Override
@@ -153,10 +151,15 @@ public class Order {
 		if (getClass() != obj.getClass())
 			return false;
 		Order other = (Order) obj;
-		return Objects.equals(client, other.client) && Objects.equals(datahora, other.datahora)
-				&& Objects.equals(establishment, other.establishment) && Objects.equals(id, other.id)
-				&& Objects.equals(observação, other.observação) && Objects.equals(paymentMethod, other.paymentMethod)
-				&& Objects.equals(products, other.products) && status == other.status;
+		return Objects.equals(id, other.id);
 	}
 
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", datahora=" + datahora +
+                ", status=" + status +
+                '}';
+    }
 }
