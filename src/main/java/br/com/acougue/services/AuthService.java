@@ -18,23 +18,21 @@ import br.com.acougue.repository.UserRepository;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final EstablishmentRepository establishmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private EstablishmentRepository establishmentRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthService(UserRepository userRepository, EstablishmentRepository establishmentRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.establishmentRepository = establishmentRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Autentica um usuário (User)
      */
-    public UserAuthResponseDTO authenticateUser(LoginDTO loginDTO) {
-        if (loginDTO == null || loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
-            throw new BadCredentialsException("Dados de login inválidos");
-        }
-
+    private UserAuthResponseDTO authenticateUser(LoginDTO loginDTO) {
         Optional<User> userOpt = userRepository.findByUsername(loginDTO.getUsername());
         
         if (userOpt.isEmpty()) {
@@ -61,11 +59,7 @@ public class AuthService {
     /**
      * Autentica um estabelecimento (Establishment)
      */
-    public EstablishmentAuthResponseDTO authenticateEstablishment(LoginDTO loginDTO) {
-        if (loginDTO == null || loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
-            throw new BadCredentialsException("Dados de login inválidos");
-        }
-        
+    private EstablishmentAuthResponseDTO authenticateEstablishment(LoginDTO loginDTO) {
         Optional<Establishment> establishmentOpt = establishmentRepository.findByUsername(loginDTO.getUsername());
         
         if (establishmentOpt.isEmpty()) {
@@ -92,6 +86,10 @@ public class AuthService {
      * Autentica automaticamente - tenta primeiro User, depois Establishment
      */
     public Object authenticate(LoginDTO loginDTO) {
+        if (loginDTO == null || loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
+            throw new BadCredentialsException("Dados de login inválidos");
+        }
+
         try {
             // Primeiro tenta autenticar como User
             return authenticateUser(loginDTO);
