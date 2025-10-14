@@ -2,21 +2,23 @@ package br.com.acougue.mapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import br.com.acougue.dto.ProductRequestDTO;
 import br.com.acougue.dto.ProductResponseDTO;
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.entities.Product;
+import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.repository.EstablishmentRepository;
 
 @Component
 public class ProductMapper {
 
-	@Autowired
-    private EstablishmentRepository establishmentRepository;
+    private final EstablishmentRepository establishmentRepository;
+
+    public ProductMapper(EstablishmentRepository establishmentRepository) {
+        this.establishmentRepository = establishmentRepository;
+    }
     
     // Converte DTO de request para entidade
     public Product toEntity(ProductRequestDTO dto) {
@@ -30,7 +32,7 @@ public class ProductMapper {
         // Busca o estabelecimento pelo ID
         if (dto.getEstablishmentId() != null) {
             Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
             product.setEstablishment(establishment);
         }
         
@@ -60,7 +62,7 @@ public class ProductMapper {
         
         if (dto.getEstablishmentId() != null) {
             Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
             entity.setEstablishment(establishment);
         }
     }

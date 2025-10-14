@@ -28,7 +28,6 @@ public class Client {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "client_name")
 	private String name;
 
 	@Column(name = "number_phone")

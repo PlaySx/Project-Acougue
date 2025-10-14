@@ -1,13 +1,14 @@
 package br.com.acougue.services;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.dto.UserDTO;
 import br.com.acougue.dto.UserRegisterDTO;
 import br.com.acougue.dto.UserAuthResponseDTO;
@@ -21,37 +22,23 @@ import br.com.acougue.repository.EstablishmentRepository;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final EstablishmentRepository establishmentRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private EstablishmentRepository establishmentRepository;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserService(UserRepository userRepository, EstablishmentRepository establishmentRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.establishmentRepository = establishmentRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional
     public UserAuthResponseDTO registerUser(UserRegisterDTO registerDTO) {
-        // Validações básicas
-        if (registerDTO == null) {
-            throw new IllegalArgumentException("Dados de registro não podem ser nulos");
-        }
-        if (registerDTO.getUsername() == null || registerDTO.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username é obrigatório");
-        }
-        if (registerDTO.getPassword() == null || registerDTO.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Senha é obrigatória");
-        }
-        if (registerDTO.getRole() == null || registerDTO.getRole().trim().isEmpty()) {
-            throw new IllegalArgumentException("Role é obrigatória");
-        }
-
         // Verificar se username já existe
         if (userRepository.existsByUsername(registerDTO.getUsername())) {
-            throw new IllegalArgumentException("Username '" + registerDTO.getUsername() + "' já existe");
+            throw new DataIntegrityViolationException("Username '" + registerDTO.getUsername() + "' já está em uso.");
         }
 
         // Converter DTO para entidade
@@ -63,7 +50,7 @@ public class UserService {
         // Se foi fornecido establishmentId, associar
         if (registerDTO.getEstablishmentId() != null) {
             Establishment establishment = establishmentRepository.findById(registerDTO.getEstablishmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Estabelecimento não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + registerDTO.getEstablishmentId()));
             user.setEstablishment(establishment);
         }
 
@@ -75,24 +62,13 @@ public class UserService {
     }
 
     public UserAuthResponseDTO validateLogin(LoginDTO loginDTO) {
-        // Validações básicas
-        if (loginDTO == null) {
-            throw new IllegalArgumentException("Dados de login não podem ser nulos");
-        }
-        if (loginDTO.getUsername() == null || loginDTO.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username é obrigatório");
-        }
-        if (loginDTO.getPassword() == null || loginDTO.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Senha é obrigatória");
-        }
-
         // Buscar usuário por username
         User user = userRepository.findByUsername(loginDTO.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+                .orElseThrow(() -> new BadCredentialsException("Credenciais inválidas"));
 
         // Validar senha
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Senha inválida");
+            throw new BadCredentialsException("Credenciais inválidas");
         }
 
         // Retornar dados seguros
@@ -104,21 +80,16 @@ public class UserService {
         return userMapper.toDTOList(users);
     }
 
-    public Optional<UserDTO> findById(Long id) {
-        if (id == null) return Optional.empty();
-        
-        return userRepository.findById(id)
-                .map(userMapper::toDTO);
+    public UserDTO findById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
+        return userMapper.toDTO(user);
     }
 
     @Transactional
     public UserDTO update(Long id, UserDTO userDTO) {
-        if (id == null || userDTO == null) {
-            throw new IllegalArgumentException("ID e DTO não podem ser nulos");
-        }
-
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
 
         userMapper.updateEntityFromDTO(existingUser, userDTO);
         User updatedUser = userRepository.save(existingUser);
@@ -127,28 +98,10 @@ public class UserService {
 
     @Transactional
     public void delete(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID não pode ser nulo");
-        }
-        
         if (!userRepository.existsById(id)) {
-            throw new IllegalArgumentException("Usuário não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Usuário não encontrado com o ID: " + id);
         }
         
         userRepository.deleteById(id);
-    }
-
-    public Optional<User> findByUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return Optional.empty();
-        }
-        return userRepository.findByUsername(username);
-    }
-    
-    public boolean isUsernameAvailable(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return false;
-        }
-        return !userRepository.existsByUsername(username);
     }
 }

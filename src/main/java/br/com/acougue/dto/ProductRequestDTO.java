@@ -1,51 +1,33 @@
 package br.com.acougue.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class ProductRequestDTO {
 
-	private String name;
-	private String description;
-	private Double value;
-	private Long establishmentId;
+    @NotBlank(message = "Nome é obrigatório")
+    private String name;
 
-	public ProductRequestDTO() {
-	}
+    private String description;
 
-	public ProductRequestDTO(String name, String description, Double value, Long establishmentId) {
-		this.name = name;
-		this.description = description;
-		this.value = value;
-		this.establishmentId = establishmentId;
-	}
+    @NotNull(message = "Valor é obrigatório")
+    @Positive(message = "Valor deve ser maior que zero")
+    private Double value;
 
-	public String getName() {
-		return name;
-	}
+    @NotNull(message = "ID do estabelecimento é obrigatório")
+    private Long establishmentId;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    // Getters e Setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public Double getValue() { return value; }
+    public void setValue(Double value) { this.value = value; }
 
-	public Double getValue() {
-		return value;
-	}
-
-	public void setValue(Double value) {
-		this.value = value;
-	}
-
-	public Long getEstablishmentId() {
-		return establishmentId;
-	}
-
-	public void setEstablishmentId(Long establishmentId) {
-		this.establishmentId = establishmentId;
-	}
+    public Long getEstablishmentId() { return establishmentId; }
+    public void setEstablishmentId(Long establishmentId) { this.establishmentId = establishmentId; }
 }

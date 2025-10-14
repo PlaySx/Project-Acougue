@@ -1,108 +1,72 @@
 package br.com.acougue.controller;
 
+import br.com.acougue.dto.ProductRequestDTO;
+import br.com.acougue.dto.ProductResponseDTO;
+import br.com.acougue.services.ProductService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import br.com.acougue.dto.OrderRequestDTO;
-import br.com.acougue.dto.OrderResponseDTO;
-import br.com.acougue.enums.OrderStatus;
-import br.com.acougue.services.OrderService;
-
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/products")
+@Validated // Habilita a validação de parâmetros para este controller
 public class ProductController {
 
-    @Autowired
-    private OrderService orderService;
+    private final ProductService productService;
 
-    @PostMapping
-    public ResponseEntity<OrderResponseDTO> create(@RequestBody OrderRequestDTO requestDTO) {
-        try {
-            OrderResponseDTO response = orderService.create(requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ProductController(ProductService productService) {
+        this.productService = productService;
     }
 
-    @GetMapping
-    public List<OrderResponseDTO> findAll() {
-        return orderService.findAll();
+    @PostMapping
+    public ResponseEntity<ProductResponseDTO> create(@Valid @RequestBody ProductRequestDTO requestDTO) {
+        ProductResponseDTO newProduct = productService.create(requestDTO);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(newProduct.getId()).toUri();
+        return ResponseEntity.created(uri).body(newProduct);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> findById(@PathVariable Long id) {
-        return orderService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProductResponseDTO> findById(@PathVariable Long id) {
+        ProductResponseDTO product = productService.findById(id);
+        return ResponseEntity.ok(product);
     }
 
-    @GetMapping("/establishment/{establishmentId}")
-    public List<OrderResponseDTO> findByEstablishmentId(@PathVariable Long establishmentId) {
-        return orderService.findByEstablishmentId(establishmentId);
+    @GetMapping
+    public ResponseEntity<List<ProductResponseDTO>> search(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "establishmentId") @NotNull(message = "O ID do estabelecimento é obrigatório.") @Min(value = 1, message = "ID do estabelecimento inválido.") Long establishmentId
+    ) {
+        List<ProductResponseDTO> products = productService.searchByName(name, establishmentId);
+        return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/client/{clientId}")
-    public List<OrderResponseDTO> findByClientId(@PathVariable Long clientId) {
-        return orderService.findByClientId(clientId);
-    }
-
-    @GetMapping("/status")
-    public List<OrderResponseDTO> findByStatus(
-            @RequestParam OrderStatus status,
-            @RequestParam Long establishmentId) {
-        return orderService.findByStatus(status, establishmentId);
-    }
-
-    @GetMapping("/recent/{establishmentId}")
-    public List<OrderResponseDTO> findRecentOrders(@PathVariable Long establishmentId) {
-        return orderService.findRecentOrders(establishmentId);
-    }
-
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<OrderResponseDTO> updateStatus(
-            @PathVariable Long id,
-            @RequestParam OrderStatus status) {
-        try {
-            OrderResponseDTO updated = orderService.updateStatus(id, status);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/price-range")
+    public ResponseEntity<List<ProductResponseDTO>> findByPriceRange(
+            @RequestParam(name = "min") Double minValue,
+            @RequestParam(name = "max") Double maxValue,
+            @RequestParam(name = "establishmentId") @NotNull(message = "O ID do estabelecimento é obrigatório.") @Min(value = 1, message = "ID do estabelecimento inválido.") Long establishmentId
+    ) {
+        List<ProductResponseDTO> products = productService.findByPriceRange(minValue, maxValue, establishmentId);
+        return ResponseEntity.ok(products);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> update(
-            @PathVariable Long id, 
-            @RequestBody OrderRequestDTO requestDTO) {
-        try {
-            OrderResponseDTO updated = orderService.update(id, requestDTO);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ProductResponseDTO> update(@PathVariable Long id, @Valid @RequestBody ProductRequestDTO requestDTO) {
+        ProductResponseDTO updatedProduct = productService.update(id, requestDTO);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        try {
-            orderService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

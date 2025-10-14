@@ -1,12 +1,16 @@
 package br.com.acougue.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * DTO para autenticação de estabelecimentos
  * Contém apenas username e password para login
  */
 public class LoginDTO {
-
+    
+    @NotBlank(message = "O campo username é obrigatório")
     private String username;
+    @NotBlank(message = "O campo password é obrigatório")
     private String password;
 
     // Construtores

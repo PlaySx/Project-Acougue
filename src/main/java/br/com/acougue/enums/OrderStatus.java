@@ -2,11 +2,13 @@ package br.com.acougue.enums;
 
 public enum OrderStatus {
 	
-	    PENDENTE("Pendente"),
-	    EM_PREPARO("Em Preparo"),
-	    PRONTO("Pronto"),
-	    ENTREGUE("Entregue"),
-	    CANCELADO("Cancelado");
+	PENDENTE("Pendente"),
+	CONFIRMADO("Confirmado"),
+	EM_PREPARO("Em Preparo"),
+	PRONTO("Pronto para Retirada/Entrega"),
+	A_CAMINHO("A Caminho"),
+	ENTREGUE("Entregue"),
+	CANCELADO("Cancelado");
 
 	    private final String displayName;
 

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.OrderRepository;
-import br.com.acougue.repository.ProductsRepository;
+import br.com.acougue.repository.ProductRepository;
 
 @Service
 public class DashboardService {
@@ -18,7 +18,7 @@ public class DashboardService {
     private ClientRepository clientRepository;
 
     @Autowired
-    private ProductsRepository productsRepository;
+    private ProductRepository productsRepository;
 
     @Autowired
     private OrderRepository orderRepository;

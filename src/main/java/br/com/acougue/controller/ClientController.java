@@ -1,11 +1,11 @@
 
 package br.com.acougue.controller;
 
+import java.net.URI;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,66 +15,64 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
-import br.com.acougue.globalException.ClienteNaoEncontradoException;
 import br.com.acougue.services.ClientService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 @RestController
-@RequestMapping("/cliente")
+@RequestMapping("/clients") // Padronizando para o inglês e plural
+@Validated
 public class ClientController {
 
-	@Autowired
-	private ClientService clientService;
+	private final ClientService clientService;
+
+	public ClientController(ClientService clientService) {
+		this.clientService = clientService;
+	}
 
 	@PostMapping
-	public ResponseEntity<ClientResponseDTO> create(@RequestBody ClientRequestDTO clientRequestDTO) {
+	public ResponseEntity<ClientResponseDTO> create(@Valid @RequestBody ClientRequestDTO clientRequestDTO) {
 		ClientResponseDTO created = clientService.create(clientRequestDTO);
-		return ResponseEntity.status(HttpStatus.CREATED).body(created);
+		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(created.getId()).toUri();
+		return ResponseEntity.created(uri).body(created);
 	}
 
 	@GetMapping
-	public List<ClientResponseDTO> findAll() {
-		return clientService.findAll();
+	public ResponseEntity<List<ClientResponseDTO>> findAll() {
+		return ResponseEntity.ok(clientService.findAll());
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
-		return clientService.findById(id).map(ResponseEntity::ok)
-				.orElseThrow(() -> new ClienteNaoEncontradoException("Cliente não encontrado com id: " + id));
-	}
-
-	@GetMapping("/establishment/{establishmentId}")
-	public List<ClientResponseDTO> findByEstablishmentId(@PathVariable Long establishmentId) {
-		return clientService.findByEstablishmentId(establishmentId);
+		ClientResponseDTO client = clientService.findById(id);
+		return ResponseEntity.ok(client);
 	}
 
 	@GetMapping("/search")
-	public List<ClientResponseDTO> searchByName(@RequestParam String name, @RequestParam Long establishmentId) {
-		return clientService.searchByName(name, establishmentId);
+	public ResponseEntity<List<ClientResponseDTO>> search(
+			@RequestParam(name = "name", required = false) String name,
+			@RequestParam(name = "establishmentId") @NotNull @Min(1) Long establishmentId
+	) {
+		return ResponseEntity.ok(clientService.searchByName(name, establishmentId));
 	}
 
 	@PutMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> update(
             @PathVariable Long id, 
-            @RequestBody ClientRequestDTO requestDTO) {
-        try {
-            ClientResponseDTO updated = clientService.update(id, requestDTO);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+            @Valid @RequestBody ClientRequestDTO requestDTO) {
+        ClientResponseDTO updated = clientService.update(id, requestDTO);
+        return ResponseEntity.ok(updated);
     }
 
 	@DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        try {
-            clientService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-       
- }
-}
+        clientService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

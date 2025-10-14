@@ -1,11 +1,11 @@
 
 package br.com.acougue.controller;
 
+import java.net.URI;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,46 +14,54 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.acougue.dto.OrderRequestDTO;
 import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.enums.OrderStatus;
-import br.com.acougue.globalException.OrderNaoEncontradoException;
 import br.com.acougue.services.OrderService;
+import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/pedido")
+@RequestMapping("/orders")
+@Validated
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @PostMapping
-    public ResponseEntity<OrderResponseDTO> create(@RequestBody OrderRequestDTO orderRequestDTO) {
+    public ResponseEntity<OrderResponseDTO> create(@Valid @RequestBody OrderRequestDTO orderRequestDTO) {
         OrderResponseDTO created = orderService.create(orderRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(uri).body(created);
     }
 
     @GetMapping
-    public List<OrderResponseDTO> findAll() {
-        return orderService.findAll();
+    public ResponseEntity<List<OrderResponseDTO>> findAll() {
+        return ResponseEntity.ok(orderService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDTO> findById(@PathVariable Long id) {
-        return orderService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new OrderNaoEncontradoException(id));
+        OrderResponseDTO order = orderService.findById(id);
+        return ResponseEntity.ok(order);
     }
 
     @PutMapping("/{id}")
-    public OrderResponseDTO update(@PathVariable Long id, @RequestBody OrderRequestDTO orderRequestDTO) {
-        return orderService.update(id, orderRequestDTO);
+    public ResponseEntity<OrderResponseDTO> update(@PathVariable Long id, @Valid @RequestBody OrderRequestDTO orderRequestDTO) {
+        OrderResponseDTO updated = orderService.update(id, orderRequestDTO);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}/status")
-    public OrderResponseDTO updateStatus(@PathVariable Long id, @RequestBody OrderStatus newStatus) {
-        return orderService.updateStatus(id, newStatus);
+    public ResponseEntity<OrderResponseDTO> updateStatus(@PathVariable Long id, @RequestBody OrderStatus newStatus) {
+        OrderResponseDTO updated = orderService.updateStatus(id, newStatus);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")

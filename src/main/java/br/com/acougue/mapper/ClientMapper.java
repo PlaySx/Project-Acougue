@@ -2,20 +2,22 @@ package br.com.acougue.mapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
 import br.com.acougue.entities.Client;
 import br.com.acougue.entities.Establishment;
+import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.repository.EstablishmentRepository;
 
 @Component
 public class ClientMapper {
-	@Autowired
-    private EstablishmentRepository establishmentRepository;
+    private final EstablishmentRepository establishmentRepository;
+
+    public ClientMapper(EstablishmentRepository establishmentRepository) {
+        this.establishmentRepository = establishmentRepository;
+    }
     
     // Converte DTO de request para entidade
     public Client toEntity(ClientRequestDTO dto) {
@@ -31,7 +33,7 @@ public class ClientMapper {
         // Busca o estabelecimento pelo ID
         if (dto.getEstablishmentId() != null) {
             Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
             client.setEstablishment(establishment);
         }
         
@@ -66,7 +68,7 @@ public class ClientMapper {
         
         if (dto.getEstablishmentId() != null) {
             Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
             entity.setEstablishment(establishment);
         }
     }
@@ -80,4 +82,3 @@ public class ClientMapper {
             .collect(Collectors.toList());
     }
 }
-
