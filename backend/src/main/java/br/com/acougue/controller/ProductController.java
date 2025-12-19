@@ -11,12 +11,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/products")
-@Validated // Habilita a validação de parâmetros para este controller
+@Validated
 public class ProductController {
 
     private final ProductService productService;
@@ -50,8 +51,8 @@ public class ProductController {
 
     @GetMapping("/price-range")
     public ResponseEntity<List<ProductResponseDTO>> findByPriceRange(
-            @RequestParam(name = "min") Double minValue,
-            @RequestParam(name = "max") Double maxValue,
+            @RequestParam(name = "min") BigDecimal minValue, // Corrigido para BigDecimal
+            @RequestParam(name = "max") BigDecimal maxValue, // Corrigido para BigDecimal
             @RequestParam(name = "establishmentId") @NotNull(message = "O ID do estabelecimento é obrigatório.") @Min(value = 1, message = "ID do estabelecimento inválido.") Long establishmentId
     ) {
         List<ProductResponseDTO> products = productService.findByPriceRange(minValue, maxValue, establishmentId);

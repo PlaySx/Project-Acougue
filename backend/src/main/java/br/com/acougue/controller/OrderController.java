@@ -1,26 +1,19 @@
-
 package br.com.acougue.controller;
-
-import java.net.URI;
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.acougue.dto.OrderRequestDTO;
 import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.enums.OrderStatus;
 import br.com.acougue.services.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
@@ -42,8 +35,14 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponseDTO>> findAll() {
-        return ResponseEntity.ok(orderService.findAll());
+    public ResponseEntity<List<OrderResponseDTO>> search(
+            @RequestParam(name = "establishmentId") Long establishmentId,
+            @RequestParam(name = "clientName", required = false) String clientName,
+            @RequestParam(name = "status", required = false) OrderStatus status,
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        List<OrderResponseDTO> orders = orderService.search(establishmentId, clientName, status, date);
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/{id}")
@@ -52,15 +51,10 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> update(@PathVariable Long id, @Valid @RequestBody OrderRequestDTO orderRequestDTO) {
-        OrderResponseDTO updated = orderService.update(id, orderRequestDTO);
-        return ResponseEntity.ok(updated);
-    }
-
     @PutMapping("/{id}/status")
-    public ResponseEntity<OrderResponseDTO> updateStatus(@PathVariable Long id, @RequestBody OrderStatus newStatus) {
-        OrderResponseDTO updated = orderService.updateStatus(id, newStatus);
+    public ResponseEntity<OrderResponseDTO> updateStatus(@PathVariable Long id, @RequestBody String newStatus) {
+        OrderStatus status = OrderStatus.valueOf(newStatus.toUpperCase());
+        OrderResponseDTO updated = orderService.updateStatus(id, status);
         return ResponseEntity.ok(updated);
     }
 

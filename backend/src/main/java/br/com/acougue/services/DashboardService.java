@@ -1,53 +1,61 @@
 package br.com.acougue.services;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import br.com.acougue.dto.DashboardDataDTO;
+import br.com.acougue.dto.TopProductDTO;
+import br.com.acougue.enums.OrderStatus;
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.OrderRepository;
-import br.com.acougue.repository.ProductRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
 
-    @Autowired
-    private ClientRepository clientRepository;
+    private final OrderRepository orderRepository;
+    private final ClientRepository clientRepository;
 
-    @Autowired
-    private ProductRepository productsRepository;
+    public DashboardService(OrderRepository orderRepository, ClientRepository clientRepository) {
+        this.orderRepository = orderRepository;
+        this.clientRepository = clientRepository;
+    }
 
-    @Autowired
-    private OrderRepository orderRepository;
+    public DashboardDataDTO getDashboardData(Long establishmentId) {
+        DashboardDataDTO data = new DashboardDataDTO();
+        LocalDate today = LocalDate.now();
 
-    /**
-     * Retorna estatísticas do estabelecimento
-     */
-    public Map<String, Object> getEstablishmentStatistics(Long establishmentId) {
-        if (establishmentId == null) {
-            throw new IllegalArgumentException("ID do estabelecimento não pode ser nulo");
+        // KPIs
+        Long totalOrdersToday = orderRepository.countByEstablishmentIdAndDatahoraBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
+        BigDecimal totalRevenueToday = orderRepository.sumTotalValueByEstablishmentIdAndDatahoraBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
+        Long newClientsToday = clientRepository.countByEstablishmentIdAndCreatedAtBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
+
+        data.setTotalOrdersToday(totalOrdersToday != null ? totalOrdersToday : 0L);
+        data.setTotalRevenueToday(totalRevenueToday != null ? totalRevenueToday : BigDecimal.ZERO);
+        data.setNewClientsToday(newClientsToday != null ? newClientsToday : 0L);
+
+        if (data.getTotalOrdersToday() > 0 && data.getTotalRevenueToday().compareTo(BigDecimal.ZERO) > 0) {
+            data.setAverageTicketToday(data.getTotalRevenueToday().divide(BigDecimal.valueOf(data.getTotalOrdersToday()), 2, BigDecimal.ROUND_HALF_UP));
+        } else {
+            data.setAverageTicketToday(BigDecimal.ZERO);
         }
 
-        Map<String, Object> stats = new HashMap<>();
-        
-        // Contadores básicos
-        Long totalClients = clientRepository.countByEstablishmentId(establishmentId);
-        Long totalProducts = productsRepository.countByEstablishmentId(establishmentId);
-        Long totalOrders = orderRepository.countByEstablishmentId(establishmentId);
-        
-        // Pedidos recentes (último mês)
-        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
-        Long recentOrders = (long) orderRepository.findRecentOrdersByEstablishmentId(establishmentId, oneMonthAgo).size();
-        
-        stats.put("totalClients", totalClients);
-        stats.put("totalProducts", totalProducts);
-        stats.put("totalOrders", totalOrders);
-        stats.put("recentOrders", recentOrders);
-        stats.put("lastUpdated", LocalDateTime.now());
-        
-        return stats;
+        // Gráfico de Status
+        Map<OrderStatus, Long> rawStatusCount = orderRepository.countByEstablishmentIdGroupByStatus(establishmentId);
+        Map<String, Long> safeStatusCount = rawStatusCount.entrySet().stream()
+                .filter(entry -> entry.getKey() != null)
+                .collect(Collectors.toMap(entry -> entry.getKey().name(), Map.Entry::getValue));
+        data.setOrderStatusCount(safeStatusCount);
+
+        // Gráfico de Top Produtos
+        List<TopProductDTO> topProducts = orderRepository.findTopSellingProducts(establishmentId, PageRequest.of(0, 5));
+        data.setTopSellingProducts(topProducts);
+
+        return data;
     }
 }

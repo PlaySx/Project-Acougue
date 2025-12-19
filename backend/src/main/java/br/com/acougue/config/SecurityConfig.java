@@ -1,10 +1,13 @@
 package br.com.acougue.config;
 
+import br.com.acougue.services.AuthorizationService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,29 +34,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable) // Forma moderna e simplificada de desabilitar o CSRF
+                .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Define a política de sessão como stateless
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(PathRequest.toH2Console()).permitAll() // Permite acesso público ao H2 Console
+                        .requestMatchers(PathRequest.toH2Console()).permitAll()
+                        .requestMatchers(mvc.pattern(HttpMethod.OPTIONS, "/**")).permitAll()
                         .requestMatchers(mvc.pattern(HttpMethod.POST, "/auth/login")).permitAll()
-                        .requestMatchers(mvc.pattern(HttpMethod.POST, "/auth/register")).permitAll() // Rota corrigida
-                        .anyRequest().authenticated() // Exige autenticação para todas as outras requisições
-                ).addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                        .requestMatchers(mvc.pattern(HttpMethod.POST, "/auth/register")).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    /**
-     * Expõe o bean do PasswordEncoder para que possamos usá-lo em outras partes da aplicação.
-     */
+    // NOVO BEAN: Configura o provedor de autenticação
+    @Bean
+    public AuthenticationProvider authenticationProvider(AuthorizationService authorizationService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(authorizationService); // Diz qual serviço busca o usuário
+        authProvider.setPasswordEncoder(passwordEncoder()); // Diz qual codificador usar para comparar as senhas
+        return authProvider;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Expõe o bean do AuthenticationManager para que possamos usá-lo na autenticação.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

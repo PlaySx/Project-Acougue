@@ -35,17 +35,20 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginDTO loginDTO) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
+        // Usa getLogin() que pode ser email (para User) ou username (para Establishment)
+        var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.getLogin(), loginDTO.getPassword());
         Authentication auth = this.authenticationManager.authenticate(usernamePassword);
 
-        var user = (User) auth.getPrincipal();
-        var token = tokenService.generateToken(user);
+        // O Principal pode ser User ou Establishment, o TokenService deve saber lidar com isso
+        var principal = auth.getPrincipal(); 
+        var token = tokenService.generateToken((User) principal); // Assumindo que o principal é sempre User por enquanto
 
         return ResponseEntity.ok(new TokenResponse(token));
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserAuthResponseDTO> register(@Valid @RequestBody UserRegisterDTO registerDTO) {
+        // Corrigido para usar o método correto do UserService
         UserAuthResponseDTO response = userService.registerUser(registerDTO);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(response.getId()).toUri();

@@ -1,70 +1,90 @@
-import { Container, Box, Typography, TextField, Button, Link as MuiLink } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './RegisterPage.css'; // Importa o CSS
 
 export default function RegisterPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [role, setRole] = useState('ROLE_EMPLOYEE');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Lógica para registrar o usuário na API
-  };
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
 
-  return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography component="h1" variant="h5">
-          Criar Conta
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-          <TextField
-            autoComplete="given-name"
-            name="fullName"
-            required
-            fullWidth
-            id="fullName"
-            label="Nome Completo"
-            autoFocus
-            margin="normal"
-          />
-          <TextField
-            required
-            fullWidth
-            id="email"
-            label="Endereço de Email"
-            name="email"
-            autoComplete="email"
-            margin="normal"
-          />
-          <TextField
-            required
-            fullWidth
-            name="password"
-            label="Senha"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            margin="normal"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="error"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Registrar
-          </Button>
-          <MuiLink component={RouterLink} to="/login" variant="body2">
-            {"Já tem uma conta? Faça login"}
-          </MuiLink>
-        </Box>
-      </Box>
-    </Container>
-  );
+        if (!email || !password) {
+            setError('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        const userData = {
+            email: email,
+            password: password,
+            role: role
+        };
+
+        try {
+            // URL CORRIGIDA para corresponder ao AuthController do backend
+            const response = await axios.post('http://localhost:8080/auth/register', userData);
+
+            if (response.status === 201) {
+                alert('Usuário cadastrado com sucesso!');
+                navigate('/login');
+            }
+        } catch (err) {
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+            } else {
+                setError('Não foi possível conectar ao servidor.');
+            }
+        }
+    };
+
+    return (
+        <div className="register-container">
+            <form className="register-form" onSubmit={handleSubmit}>
+                <h2>Cadastro de Usuário</h2>
+
+                {error && <p className="error-message">{error}</p>}
+
+                <div className="form-group">
+                    <label htmlFor="email">Email:</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="password">Senha:</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="role">Função:</label>
+                    <select
+                        id="role"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                    >
+                        <option value="ROLE_EMPLOYEE">Funcionário</option>
+                        <option value="ROLE_OWNER">Proprietário</option>
+                    </select>
+                </div>
+
+                <button type="submit" className="register-button">Cadastrar</button>
+            </form>
+        </div>
+    );
 }

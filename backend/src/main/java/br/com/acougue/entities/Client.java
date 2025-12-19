@@ -1,24 +1,14 @@
 package br.com.acougue.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_client")
@@ -28,6 +18,7 @@ public class Client {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "client_name")
 	private String name;
 
 	@Column(name = "number_phone")
@@ -40,12 +31,16 @@ public class Client {
 	private String addressNeighborhood;
 
 	@Column(name = "client_observation")
-	private String observation; // Renamed from Observation
+	private String observation;
+
+	@CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
 	@ManyToMany
 	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore
-	private List<Product> products; // Changed from Products
+	private List<Product> products;
 
 	@OneToMany(mappedBy = "client")
 	@JsonIgnore
@@ -56,119 +51,43 @@ public class Client {
 	@JsonIgnoreProperties({ "clients", "products", "orders" })
 	private Establishment establishment;
 
-	public Client() {
+	public Client() {}
 
-	}
-
-	public Client(Long id, String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, List<Product> products, List<Order> orders, Establishment establishment) { // Changed from Products
-		super();
-		this.id = id;
-		this.name = name;
-		this.numberPhone = numberPhone;
-		this.address = address;
-		this.addressNeighborhood = addressNeighborhood;
-		this.observation = observation; // Corrected assignment
-		this.products = products;
-		this.orders = orders;
-		this.establishment = establishment;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Long getNumberPhone() {
-		return numberPhone;
-	}
-
-	public void setNumberPhone(Long numberPhone) {
-		this.numberPhone = numberPhone;
-	}
-
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public String getAddressNeighborhood() {
-		return addressNeighborhood;
-	}
-
-	public void setAddressNeighborhood(String addressNeighborhood) {
-		this.addressNeighborhood = addressNeighborhood;
-	}
-
-	public String getObservation() {
-		return observation;
-	}
-
-	public void setObservation(String observation) {
-		this.observation = observation;
-	}
-
-	public List<Product> getProducts() { // Changed from Products
-		return products;
-	}
-
-	public void setProducts(List<Product> products) { // Changed from Products
-		this.products = products;
-	}
-
-	public List<Order> getOrders() {
-		return orders;
-	}
-
-	public void setOrders(List<Order> orders) {
-		this.orders = orders;
-	}
-
-	public Establishment getEstablishment() {
-		return establishment;
-	}
-
-	public void setEstablishment(Establishment establishment) {
-		this.establishment = establishment;
-	}
+	// Getters e Setters... (Omitidos para brevidade, mas devem existir)
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Long getNumberPhone() { return numberPhone; }
+    public void setNumberPhone(Long numberPhone) { this.numberPhone = numberPhone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getAddressNeighborhood() { return addressNeighborhood; }
+    public void setAddressNeighborhood(String addressNeighborhood) { this.addressNeighborhood = addressNeighborhood; }
+    public String getObservation() { return observation; }
+    public void setObservation(String observation) { this.observation = observation; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public List<Product> getProducts() { return products; }
+    public void setProducts(List<Product> products) { this.products = products; }
+    public List<Order> getOrders() { return orders; }
+    public void setOrders(List<Order> orders) { this.orders = orders; }
+    public Establishment getEstablishment() { return establishment; }
+    public void setEstablishment(Establishment establishment) { this.establishment = establishment; }
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(id);
-	}
+	public int hashCode() { return Objects.hash(id); }
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
+		if (this == obj) return true;
+		if (obj == null || getClass() != obj.getClass()) return false;
 		Client other = (Client) obj;
 		return Objects.equals(id, other.id);
 	}
 
     @Override
     public String toString() {
-        return "Client{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", numberPhone=" + numberPhone +
-                '}';
+        return "Client{" + "id=" + id + ", name='" + name + '\'' + ", numberPhone=" + numberPhone + '}';
     }
 }

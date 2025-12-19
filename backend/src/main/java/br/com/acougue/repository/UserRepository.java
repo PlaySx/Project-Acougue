@@ -14,11 +14,11 @@ import br.com.acougue.enums.Role;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     
-    // Busca usuário por username. Ideal para login.
-    Optional<User> findByUsername(String username);
+    // Busca usuário por email. Ideal para login.
+    Optional<User> findByEmail(String email);
 
-    // Verifica se existe usuário com username
-    boolean existsByUsername(String username);
+    // Verifica se existe usuário com email
+    boolean existsByEmail(String email);
 
     // Conta o total de todos os usuários
     @Query("SELECT COUNT(u) FROM User u")

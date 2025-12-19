@@ -23,7 +23,7 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String email; // Renamed from username
 
     @Column(nullable = false)
     private String password;
@@ -39,15 +39,15 @@ public class User implements UserDetails {
     // Construtores
     public User() {}
 
-    public User(String username, String password, Role role) {
-        this.username = username;
+    public User(String email, String password, Role role) {
+        this.email = email;
         this.password = password;
         this.role = role;
     }
 
-    public User(Long id, String username, String password, Role role, Establishment establishment) {
+    public User(Long id, String email, String password, Role role, Establishment establishment) {
         this.id = id;
-        this.username = username;
+        this.email = email;
         this.password = password;
         this.role = role;
         this.establishment = establishment;
@@ -60,6 +60,14 @@ public class User implements UserDetails {
     
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Role getRole() { 
@@ -76,10 +84,6 @@ public class User implements UserDetails {
     
     public void setEstablishment(Establishment establishment) { 
         this.establishment = establishment; 
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public void setPassword(String password) {
@@ -99,7 +103,7 @@ public class User implements UserDetails {
     
     @Override
     public String getUsername() { 
-        return username; 
+        return this.email; // Spring Security usa este método, que agora retorna o email
     }
     
     @Override
@@ -139,7 +143,7 @@ public class User implements UserDetails {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
                 ", role=" + role +
                 '}';
     }

@@ -27,7 +27,7 @@ public class UserMapper {
         }
         
         User user = new User();
-        user.setUsername(registerDTO.getUsername());
+        user.setEmail(registerDTO.getEmail()); // Corrigido de getUsername
         // password será setada no Service após criptografia
         
         // Converter string role para enum
@@ -50,7 +50,7 @@ public class UserMapper {
         
         UserAuthResponseDTO dto = new UserAuthResponseDTO();
         dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail()); // Corrigido de getUsername
         dto.setRole(user.getRole() != null ? user.getRole().name() : null);
         
         if (user.getEstablishment() != null) {
@@ -71,7 +71,7 @@ public class UserMapper {
         
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail()); // Corrigido de getUsername
         dto.setRole(user.getRole() != null ? user.getRole().name() : null);
         
         if (user.getEstablishment() != null) {
@@ -90,7 +90,7 @@ public class UserMapper {
         
         User user = new User();
         user.setId(dto.getId());
-        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail()); // Corrigido de getUsername
         
         // Converter string role para enum
         if (dto.getRole() != null) {
@@ -104,12 +104,12 @@ public class UserMapper {
     
     /**
      * Atualiza entidade User existente com dados do DTO
-     * NÃO atualiza username nem password por segurança
+     * NÃO atualiza email nem password por segurança
      */
     public void updateEntityFromDTO(User entity, UserDTO dto) {
         if (entity == null || dto == null) return;
         
-        // Apenas campos editáveis (não username nem password)
+        // Apenas campos editáveis (não email nem password)
         if (dto.getRole() != null) {
             entity.setRole(Role.valueOf(dto.getRole()));
         }
@@ -155,9 +155,9 @@ public class UserMapper {
     /**
      * Cria funcionário com establishment e role fixa
      */
-    public User createEmployee(String username, String password, Establishment establishment) {
+    public User createEmployee(String email, String password, Establishment establishment) {
         User employee = new User();
-        employee.setUsername(username);
+        employee.setEmail(email); // Corrigido de setUsername
         employee.setPassword(password); // Será criptografada no Service
         employee.setRole(Role.ROLE_EMPLOYEE);
         employee.setEstablishment(establishment);
@@ -167,9 +167,9 @@ public class UserMapper {
     /**
      * Cria proprietário com establishment e role fixa
      */
-    public User createOwner(String username, String password, Establishment establishment) {
+    public User createOwner(String email, String password, Establishment establishment) {
         User owner = new User();
-        owner.setUsername(username);
+        owner.setEmail(email); // Corrigido de setUsername
         owner.setPassword(password); // Será criptografada no Service
         owner.setRole(Role.ROLE_OWNER);
         owner.setEstablishment(establishment);

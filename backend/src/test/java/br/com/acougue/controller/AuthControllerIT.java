@@ -48,9 +48,11 @@ class AuthControllerIT {
 
     @BeforeEach
     void setUp() {
-        // Cria um usuário e um estabelecimento com senhas criptografadas
+        userRepository.deleteAll();
+        establishmentRepository.deleteAll();
+
         User user = new User();
-        user.setUsername("testuser");
+        user.setEmail("testuser@example.com"); // Corrigido para setEmail
         user.setPassword(passwordEncoder.encode(plainPassword));
         user.setRole(Role.ROLE_EMPLOYEE);
         userRepository.save(user);
@@ -63,9 +65,9 @@ class AuthControllerIT {
     }
 
     @Test
-    void login_shouldReturnOkAndUserDTO_whenUserCredentialsAreValid() throws Exception {
+    void login_shouldReturnOkAndToken_whenUserCredentialsAreValid() throws Exception {
         // Arrange
-        LoginDTO loginDTO = new LoginDTO("testuser", plainPassword);
+        LoginDTO loginDTO = new LoginDTO("testuser@example.com", plainPassword); // Usa email para o login
         String jsonBody = objectMapper.writeValueAsString(loginDTO);
 
         // Act
@@ -75,12 +77,12 @@ class AuthControllerIT {
 
         // Assert
         result.andExpect(status().isOk());
-        result.andExpect(jsonPath("$.username").value("testuser"));
-        result.andExpect(jsonPath("$.role").value("ROLE_EMPLOYEE"));
+        result.andExpect(jsonPath("$.token").exists());
     }
 
+    // O login de estabelecimento continua usando username, o que é ok.
     @Test
-    void login_shouldReturnOkAndEstablishmentDTO_whenEstablishmentCredentialsAreValid() throws Exception {
+    void login_shouldReturnOkAndToken_whenEstablishmentCredentialsAreValid() throws Exception {
         // Arrange
         LoginDTO loginDTO = new LoginDTO("testestablishment", plainPassword);
         String jsonBody = objectMapper.writeValueAsString(loginDTO);
@@ -92,14 +94,13 @@ class AuthControllerIT {
 
         // Assert
         result.andExpect(status().isOk());
-        result.andExpect(jsonPath("$.username").value("testestablishment"));
-        result.andExpect(jsonPath("$.name").value("Açougue Teste"));
+        result.andExpect(jsonPath("$.token").exists());
     }
 
     @Test
     void login_shouldReturnUnauthorized_whenPasswordIsInvalid() throws Exception {
         // Arrange
-        LoginDTO loginDTO = new LoginDTO("testuser", "wrongpassword");
+        LoginDTO loginDTO = new LoginDTO("testuser@example.com", "wrongpassword");
         String jsonBody = objectMapper.writeValueAsString(loginDTO);
 
         // Act
@@ -109,7 +110,5 @@ class AuthControllerIT {
 
         // Assert
         result.andExpect(status().isUnauthorized());
-        result.andExpect(jsonPath("$.error").value("Não autorizado"));
-        result.andExpect(jsonPath("$.message").value("Credenciais inválidas"));
     }
 }

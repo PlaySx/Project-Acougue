@@ -1,131 +1,116 @@
 package br.com.acougue.mapper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
+import br.com.acougue.dto.OrderItemRequestDTO;
+import br.com.acougue.dto.OrderItemResponseDTO;
 import br.com.acougue.dto.OrderRequestDTO;
 import br.com.acougue.dto.OrderResponseDTO;
-import br.com.acougue.entities.Client;
-import br.com.acougue.entities.Establishment;
-import br.com.acougue.entities.Order;
-import br.com.acougue.entities.Product; // Changed from Products
+import br.com.acougue.entities.*;
+import br.com.acougue.enums.PricingType;
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.EstablishmentRepository;
-import br.com.acougue.repository.ProductRepository; // Changed from ProductsRepository
+import br.com.acougue.repository.ProductRepository;
+import br.com.acougue.exceptions.ResourceNotFoundException;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderMapper {
 
-	@Autowired
-	private ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
+    private final EstablishmentRepository establishmentRepository;
+    private final ProductRepository productRepository;
 
-	@Autowired
-	private EstablishmentRepository establishmentRepository;
+    public OrderMapper(ClientRepository clientRepository, EstablishmentRepository establishmentRepository, ProductRepository productRepository) {
+        this.clientRepository = clientRepository;
+        this.establishmentRepository = establishmentRepository;
+        this.productRepository = productRepository;
+    }
 
-	@Autowired
-	private ProductRepository productRepository; // Changed from productsRepository
+    public Order toEntity(OrderRequestDTO dto) {
+        if (dto == null) return null;
 
-	@Autowired
-	private ProductMapper productMapper;
+        Order order = new Order();
+        order.setDatahora(LocalDateTime.now());
+        order.setPaymentMethod(dto.getPaymentMethod());
+        order.setObservation(dto.getObservation());
 
-	// Converte DTO de request para entidade
-	public Order toEntity(OrderRequestDTO dto) {
-		if (dto == null)
-			return null;
+        Client client = clientRepository.findById(dto.getClientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com id: " + dto.getClientId()));
+        order.setClient(client);
 
-		Order order = new Order();
-		order.setDatahora(dto.getDatahora());
-		order.setPaymentMethod(dto.getPaymentMethod());
-		order.setObservation(dto.getObservacao()); // Changed from setObservação
+        Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com id: " + dto.getEstablishmentId()));
+        order.setEstablishment(establishment);
 
-		// Busca o cliente pelo ID
-		if (dto.getClientId() != null) {
-			Client client = clientRepository.findById(dto.getClientId())
-					.orElseThrow(() -> new RuntimeException("Client not found with id: " + dto.getClientId()));
-			order.setClient(client);
-		}
+        BigDecimal totalOrderValue = BigDecimal.ZERO;
 
-		// Busca o estabelecimento pelo ID
-		if (dto.getEstablishmentId() != null) {
-			Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId()).orElseThrow(
-					() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
-			order.setEstablishment(establishment);
-		}
+        for (var itemDto : dto.getItems()) {
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + itemDto.getProductId()));
 
-		// Busca os produtos pelos IDs
-		if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-			List<Product> products = new ArrayList<>(); // Changed from Products
-			for (Long productId : dto.getProductIds()) {
-				Product product = productRepository.findById(productId) // Changed from Products
-						.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-				products.add(product);
-			}
-			order.setProducts(products);
-		}
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProduct(product);
+            
+            BigDecimal itemPrice;
 
-		return order;
-	}
+            if (product.getPricingType() == PricingType.PER_KG) {
+                if (itemDto.getWeightInGrams() == null || itemDto.getWeightInGrams() <= 0) {
+                    throw new IllegalArgumentException("Peso em gramas é obrigatório para produtos por KG.");
+                }
+                orderItem.setWeightInGrams(itemDto.getWeightInGrams());
+                BigDecimal weightInKg = new BigDecimal(itemDto.getWeightInGrams()).divide(new BigDecimal(1000), 4, RoundingMode.HALF_UP);
+                itemPrice = product.getUnitPrice().multiply(weightInKg).setScale(2, RoundingMode.HALF_UP);
+            } else { // PER_UNIT
+                if (itemDto.getQuantity() == null || itemDto.getQuantity() <= 0) {
+                    throw new IllegalArgumentException("Quantidade é obrigatória para produtos por unidade.");
+                }
+                orderItem.setQuantity(itemDto.getQuantity());
+                itemPrice = product.getUnitPrice().multiply(new BigDecimal(itemDto.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+            }
+            
+            orderItem.setPrice(itemPrice);
+            order.addItem(orderItem);
+            totalOrderValue = totalOrderValue.add(itemPrice);
+        }
+        
+        order.setTotalValue(totalOrderValue);
+        return order;
+    }
 
-	// Converte entidade para DTO de response
-	public OrderResponseDTO toResponseDTO(Order entity) {
-		if (entity == null)
-			return null;
+    public OrderResponseDTO toResponseDTO(Order entity) {
+        if (entity == null) return null;
 
-		// Calcula o valor total do pedido
-		Double totalValue = 0.0;
-		if (entity.getProducts() != null) {
-			totalValue = entity.getProducts().stream()
-					.mapToDouble(product -> product.getValue() != null ? product.getValue() : 0.0).sum();
-		}
+        List<OrderItemResponseDTO> itemDTOs = entity.getItems().stream()
+                .map(item -> new OrderItemResponseDTO(
+                        item.getProduct().getId(),
+                        item.getProduct().getName(),
+                        item.getQuantity(),
+                        item.getWeightInGrams(),
+                        item.getPrice()
+                ))
+                .collect(Collectors.toList());
 
-		return new OrderResponseDTO(entity.getId(), entity.getDatahora(), entity.getStatus(), entity.getPaymentMethod(),
-				entity.getObservation(), entity.getClient() != null ? entity.getClient().getName() : null, // Changed from getObservação
-				entity.getEstablishment() != null ? entity.getEstablishment().getName() : null,
-				entity.getProducts() != null ? productMapper.toResponseDTOList(entity.getProducts()) : null,
-				totalValue);
-	}
+        return new OrderResponseDTO(
+                entity.getId(),
+                entity.getDatahora(),
+                entity.getStatus(),
+                entity.getPaymentMethod(),
+                entity.getObservation(),
+                entity.getClient() != null ? entity.getClient().getName() : null,
+                entity.getEstablishment() != null ? entity.getEstablishment().getName() : null,
+                itemDTOs,
+                entity.getTotalValue()
+        );
+    }
 
-	// Atualiza entidade existente com dados do DTO
-	public void updateEntityFromDTO(Order entity, OrderRequestDTO dto) {
-		if (entity == null || dto == null)
-			return;
-
-		entity.setDatahora(dto.getDatahora());
-		entity.setPaymentMethod(dto.getPaymentMethod());
-		entity.setObservation(dto.getObservacao()); // Changed from setObservação
-
-		if (dto.getClientId() != null) {
-			Client client = clientRepository.findById(dto.getClientId())
-					.orElseThrow(() -> new RuntimeException("Client not found with id: " + dto.getClientId()));
-			entity.setClient(client);
-		}
-
-		if (dto.getEstablishmentId() != null) {
-			Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId()).orElseThrow(
-					() -> new RuntimeException("Establishment not found with id: " + dto.getEstablishmentId()));
-			entity.setEstablishment(establishment);
-		}
-
-		if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-			List<Product> products = new ArrayList<>(); // Changed from Products
-			for (Long productId : dto.getProductIds()) {
-				Product product = productRepository.findById(productId) // Changed from Products
-						.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-				products.add(product);
-			}
-			entity.setProducts(products);
-		}
-	}
-
-	// Converte lista de entidades para lista de DTOs de response
-	public List<OrderResponseDTO> toResponseDTOList(List<Order> entities) {
-		if (entities == null)
-			return null;
-
-		return entities.stream().map(this::toResponseDTO).collect(Collectors.toList());
-	}
+    public List<OrderResponseDTO> toResponseDTOList(List<Order> entities) {
+        return entities.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
 }

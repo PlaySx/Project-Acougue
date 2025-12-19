@@ -21,11 +21,14 @@ public class TokenService {
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.create()
+            String token = JWT.create()
                     .withIssuer("acougue-api")
-                    .withSubject(user.getUsername())
+                    .withSubject(user.getEmail())
+                    .withClaim("role", user.getRole().name()) // Adiciona a role do usuário
+                    .withClaim("establishmentId", user.getEstablishment() != null ? user.getEstablishment().getId() : null)
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
+            return token;
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar o token JWT", exception);
         }
@@ -40,12 +43,11 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
         } catch (JWTVerificationException exception) {
-            return ""; // Retorna vazio se o token for inválido
+            return ""; 
         }
     }
 
     private Instant generateExpirationDate() {
-        // Token expira em 2 horas
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }

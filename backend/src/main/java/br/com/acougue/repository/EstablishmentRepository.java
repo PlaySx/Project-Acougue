@@ -15,5 +15,7 @@ public interface EstablishmentRepository extends JpaRepository<Establishment, Lo
 
     boolean existsByUsername(String username);
 
+    boolean existsByCnpj(Long cnpj); // Adicionado para a validação
+
     List<Establishment> findByUsers_Id(Long userId);
 }

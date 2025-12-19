@@ -1,16 +1,19 @@
 package br.com.acougue.services;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import br.com.acougue.dto.ProductRequestDTO;
 import br.com.acougue.dto.ProductResponseDTO;
 import br.com.acougue.entities.Product;
+import br.com.acougue.enums.Role;
 import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.mapper.ProductMapper;
 import br.com.acougue.repository.ProductRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class ProductService {
@@ -30,34 +33,32 @@ public class ProductService {
         return productMapper.toResponseDTO(savedProduct);
     }
 
-    public List<ProductResponseDTO> findAll() {
-        List<Product> products = productRepository.findAll();
-        return productMapper.toResponseDTOList(products);
-    }
-
-    public List<ProductResponseDTO> findByEstablishmentId(Long establishmentId) {
-        List<Product> products = productRepository.findByEstablishmentId(establishmentId);
-        return productMapper.toResponseDTOList(products);
-    }
-
+    @Transactional(readOnly = true)
     public ProductResponseDTO findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID: " + id));
         return productMapper.toResponseDTO(product);
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponseDTO> searchByName(String name, Long establishmentId) {
-        // Se o nome não for fornecido, retorna todos os produtos do estabelecimento.
         if (name == null || name.trim().isEmpty()) {
             return findByEstablishmentId(establishmentId);
         }
-        
         List<Product> products = productRepository.findByNameContainingIgnoreCaseAndEstablishmentId(name, establishmentId);
         return productMapper.toResponseDTOList(products);
     }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> findByEstablishmentId(Long establishmentId) {
+        List<Product> products = productRepository.findByEstablishmentId(establishmentId);
+        return productMapper.toResponseDTOList(products);
+    }
     
-    public List<ProductResponseDTO> findByPriceRange(Double minValue, Double maxValue, Long establishmentId) {
-        List<Product> products = productRepository.findByValueBetweenAndEstablishmentId(minValue, maxValue, establishmentId);
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> findByPriceRange(BigDecimal minValue, BigDecimal maxValue, Long establishmentId) {
+        // CORREÇÃO FINAL: Usando o nome de método  correto do repositório
+        List<Product> products = productRepository.findByUnitPriceBetweenAndEstablishmentId(minValue, maxValue, establishmentId);
         return productMapper.toResponseDTOList(products);
     }
 
@@ -66,6 +67,16 @@ public class ProductService {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID: " + id));
 
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isOwner = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(Role.ROLE_OWNER.name()));
+
+        if (!isOwner) {
+            if (existingProduct.getUnitPrice().compareTo(requestDTO.getUnitPrice()) != 0) {
+                throw new AccessDeniedException("Funcionários não podem alterar o preço dos produtos.");
+            }
+        }
+
         productMapper.updateEntityFromDTO(existingProduct, requestDTO);
         Product updatedProduct = productRepository.save(existingProduct);
         return productMapper.toResponseDTO(updatedProduct);
@@ -73,10 +84,9 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
-        // Busca o produto para garantir que ele existe antes de deletar.
-        // Se não existir, o orElseThrow já lança a exceção correta (404).
-        Product productToDelete = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o ID: " + id));
-        productRepository.delete(productToDelete);
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Produto não encontrado com o ID: " + id);
+        }
+        productRepository.deleteById(id);
     }
 }

@@ -1,75 +1,36 @@
 package br.com.acougue.dto;
 
-import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public class OrderRequestDTO {
 
-	private LocalDateTime datahora;
-	private String paymentMethod;
-	private String observacao;
-	private Long clientId;
-	private Long establishmentId;
-	private List<Long> productIds;
+    @NotNull(message = "O ID do cliente é obrigatório")
+    private Long clientId;
 
-	public OrderRequestDTO() {
-	}
+    @NotEmpty(message = "O pedido deve ter pelo menos um item")
+    private List<OrderItemRequestDTO> items;
 
-	public OrderRequestDTO(LocalDateTime datahora, String paymentMethod, String observacao, Long clientId,
-			Long establishmentId, List<Long> productIds) {
-		this.datahora = datahora;
-		this.paymentMethod = paymentMethod;
-		this.observacao = observacao;
-		this.clientId = clientId;
-		this.establishmentId = establishmentId;
-		this.productIds = productIds;
-	}
+    private String paymentMethod;
+    private String observation;
 
-	public LocalDateTime getDatahora() {
-		return datahora;
-	}
+    @NotNull(message = "O ID do estabelecimento é obrigatório")
+    private Long establishmentId;
 
-	public void setDatahora(LocalDateTime datahora) {
-		this.datahora = datahora;
-	}
+    // Getters e Setters
+    public Long getClientId() { return clientId; }
+    public void setClientId(Long clientId) { this.clientId = clientId; }
 
-	public String getPaymentMethod() {
-		return paymentMethod;
-	}
+    public List<OrderItemRequestDTO> getItems() { return items; }
+    public void setItems(List<OrderItemRequestDTO> items) { this.items = items; }
 
-	public void setPaymentMethod(String paymentMethod) {
-		this.paymentMethod = paymentMethod;
-	}
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
-	public String getObservacao() {
-		return observacao;
-	}
+    public String getObservation() { return observation; }
+    public void setObservation(String observation) { this.observation = observation; }
 
-	public void setObservacao(String observacao) {
-		this.observacao = observacao;
-	}
-
-	public Long getClientId() {
-		return clientId;
-	}
-
-	public void setClientId(Long clientId) {
-		this.clientId = clientId;
-	}
-
-	public Long getEstablishmentId() {
-		return establishmentId;
-	}
-
-	public void setEstablishmentId(Long establishmentId) {
-		this.establishmentId = establishmentId;
-	}
-
-	public List<Long> getProductIds() {
-		return productIds;
-	}
-
-	public void setProductIds(List<Long> productIds) {
-		this.productIds = productIds;
-	}
+    public Long getEstablishmentId() { return establishmentId; }
+    public void setEstablishmentId(Long establishmentId) { this.establishmentId = establishmentId; }
 }

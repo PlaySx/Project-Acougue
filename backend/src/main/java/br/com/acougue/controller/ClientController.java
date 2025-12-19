@@ -1,21 +1,4 @@
-
 package br.com.acougue.controller;
-
-import java.net.URI;
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
@@ -23,9 +6,18 @@ import br.com.acougue.services.ClientService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
-@RequestMapping("/clients") // Padronizando para o inglês e plural
+@RequestMapping("/clients")
 @Validated
 public class ClientController {
 
@@ -43,23 +35,24 @@ public class ClientController {
 		return ResponseEntity.created(uri).body(created);
 	}
 
-	@GetMapping
-	public ResponseEntity<List<ClientResponseDTO>> findAll() {
-		return ResponseEntity.ok(clientService.findAll());
+	@GetMapping("/advanced-search")
+	public ResponseEntity<List<ClientResponseDTO>> advancedSearch(
+			@RequestParam @NotNull Long establishmentId,
+			@RequestParam(required = false) String name,
+			@RequestParam(required = false) String address,
+			@RequestParam(required = false) String neighborhood, // Trocado de 'observation'
+			@RequestParam(required = false) String productName,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+	) {
+		List<ClientResponseDTO> clients = clientService.advancedSearch(establishmentId, name, address, neighborhood, productName, startDate, endDate);
+		return ResponseEntity.ok(clients);
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
 		ClientResponseDTO client = clientService.findById(id);
 		return ResponseEntity.ok(client);
-	}
-
-	@GetMapping("/search")
-	public ResponseEntity<List<ClientResponseDTO>> search(
-			@RequestParam(name = "name", required = false) String name,
-			@RequestParam(name = "establishmentId") @NotNull @Min(1) Long establishmentId
-	) {
-		return ResponseEntity.ok(clientService.searchByName(name, establishmentId));
 	}
 
 	@PutMapping("/{id}")

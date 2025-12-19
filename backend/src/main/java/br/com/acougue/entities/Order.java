@@ -1,5 +1,6 @@
 package br.com.acougue.entities;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,18 +9,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import br.com.acougue.enums.OrderStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_order")
@@ -40,7 +30,7 @@ public class Order {
 	private String paymentMethod;
 
 	@Column(name = "order_observation")
-	private String observation; // Renamed from observação
+	private String observation;
 
 	@ManyToOne
 	@JoinColumn(name = "cliente_id")
@@ -51,115 +41,54 @@ public class Order {
 	@JsonIgnore
 	private Establishment establishment;
 
-	@ManyToMany
-	@JoinTable(name = "order_product", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
-	@JsonIgnore
-	private List<Product> products = new ArrayList<>(); // Changed from Products
+	// A relação agora é com OrderItem
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<OrderItem> items = new ArrayList<>();
 
-	public Order() {
+	@Column(name = "total_value", precision = 10, scale = 2)
+    private BigDecimal totalValue;
 
-	}
+	public Order() {}
 
-	public Order(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod, String observation,
-			Client client, Establishment establishment, List<Product> products) { // Changed from Products
-		super();
-		this.id = id;
-		this.datahora = datahora;
-		this.status = status;
-		this.paymentMethod = paymentMethod;
-		this.observation = observation;
-		this.client = client;
-		this.establishment = establishment;
-		this.products = products;
-	}
+	// Getters e Setters
+	public Long getId() { return id; }
+	public void setId(Long id) { this.id = id; }
+	public LocalDateTime getDatahora() { return datahora; }
+	public void setDatahora(LocalDateTime datahora) { this.datahora = datahora; }
+	public OrderStatus getStatus() { return status; }
+	public void setStatus(OrderStatus status) { this.status = status; }
+	public String getPaymentMethod() { return paymentMethod; }
+	public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+	public String getObservation() { return observation; }
+	public void setObservation(String observation) { this.observation = observation; }
+	public Client getClient() { return client; }
+	public void setClient(Client client) { this.client = client; }
+	public Establishment getEstablishment() { return establishment; }
+	public void setEstablishment(Establishment establishment) { this.establishment = establishment; }
+	public List<OrderItem> getItems() { return items; }
+	public void setItems(List<OrderItem> items) { this.items = items; }
+    public BigDecimal getTotalValue() { return totalValue; }
+    public void setTotalValue(BigDecimal totalValue) { this.totalValue = totalValue; }
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public LocalDateTime getDatahora() {
-		return datahora;
-	}
-
-	public void setDatahora(LocalDateTime datahora) {
-		this.datahora = datahora;
-	}
-
-	public OrderStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(OrderStatus status) {
-		this.status = status;
-	}
-
-	public String getPaymentMethod() {
-		return paymentMethod;
-	}
-
-	public void setPaymentMethod(String paymentMethod) {
-		this.paymentMethod = paymentMethod;
-	}
-
-	public String getObservation() { // Renamed from getObservação
-		return observation;
-	}
-
-	public void setObservation(String observation) { // Renamed from setObservação
-		this.observation = observation;
-	}
-
-	public Client getClient() {
-		return client;
-	}
-
-	public void setClient(Client client) {
-		this.client = client;
-	}
-
-	public Establishment getEstablishment() {
-		return establishment;
-	}
-
-	public void setEstablishment(Establishment establishment) {
-		this.establishment = establishment;
-	}
-
-	public List<Product> getProducts() { // Changed from Products
-		return products;
-	}
-
-	public void setProducts(List<Product> products) { // Changed from Products
-		this.products = products;
-	}
+    // Método utilitário para adicionar itens e manter a consistência
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(id);
-	}
+	public int hashCode() { return Objects.hash(id); }
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
+		if (this == obj) return true;
+		if (obj == null || getClass() != obj.getClass()) return false;
 		Order other = (Order) obj;
 		return Objects.equals(id, other.id);
 	}
 
     @Override
     public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", datahora=" + datahora +
-                ", status=" + status +
-                '}';
+        return "Order{" + "id=" + id + ", datahora=" + datahora + ", status=" + status + '}';
     }
 }

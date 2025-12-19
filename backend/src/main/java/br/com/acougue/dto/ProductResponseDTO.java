@@ -1,61 +1,35 @@
 package br.com.acougue.dto;
 
+import br.com.acougue.enums.PricingType;
+import br.com.acougue.enums.ProductCategory;
+import java.math.BigDecimal;
+
 public class ProductResponseDTO {
 
 	private Long id;
 	private String name;
 	private String description;
-	private Double value;
+	private ProductCategory category;
+	private PricingType pricingType;
+	private BigDecimal unitPrice;
 	private Long establishmentId;
 
-	public ProductResponseDTO() {
-	}
-
-	public ProductResponseDTO(Long id, String name, String description, Double value, Long establishmentId) {
+	public ProductResponseDTO(Long id, String name, String description, ProductCategory category, PricingType pricingType, BigDecimal unitPrice, Long establishmentId) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
-		this.value = value;
+		this.category = category;
+		this.pricingType = pricingType;
+		this.unitPrice = unitPrice;
 		this.establishmentId = establishmentId;
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Double getValue() {
-		return value;
-	}
-
-	public void setValue(Double value) {
-		this.value = value;
-	}
-
-	public Long getEstablishmentId() {
-		return establishmentId;
-	}
-
-	public void setEstablishmentId(Long establishmentId) {
-		this.establishmentId = establishmentId;
-	}
+	// Getters
+	public Long getId() { return id; }
+	public String getName() { return name; }
+	public String getDescription() { return description; }
+	public ProductCategory getCategory() { return category; }
+	public PricingType getPricingType() { return pricingType; }
+	public BigDecimal getUnitPrice() { return unitPrice; }
+	public Long getEstablishmentId() { return establishmentId; }
 }

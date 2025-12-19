@@ -1,195 +1,95 @@
 import React, { useState } from 'react';
-import { register } from '../services/api';
-import './Register.css';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './Register.css'; // Vamos criar este arquivo de CSS a seguir
 
-function Register({ onRegisterSuccess, onBackToLogin }) {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        role: 'ROLE_USER', // Valor padrão
-        establishmentId: ''
-    });
+function Register() {
+    // Estados para armazenar os dados do formulário
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [role, setRole] = useState('ROLE_EMPLOYEE'); // Valor padrão
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate(); // Hook para redirecionar o usuário
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Limpa mensagens ao digitar
-        setError('');
-        setSuccess('');
-    };
+    // Função chamada ao submeter o formulário
+    const handleSubmit = async (event) => {
+        event.preventDefault(); // Previne o recarregamento da página
+        setError(''); // Limpa erros anteriores
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-
-        // Validações no frontend
-        if (formData.password !== formData.confirmPassword) {
-            setError('As senhas não coincidem');
+        if (!username || !password) {
+            setError('Por favor, preencha todos os campos.');
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError('A senha deve ter no mínimo 6 caracteres');
-            return;
-        }
-
-        setLoading(true);
+        // Monta o objeto para enviar ao backend
+        const userData = {
+            username: username,
+            password: password,
+            role: role
+        };
 
         try {
-            // Prepara o payload (remove confirmPassword e campos vazios)
-            const userData = {
-                username: formData.username,
-                password: formData.password,
-                ...(formData.email && { email: formData.email }),
-                ...(formData.establishmentId && { 
-                    establishmentId: parseInt(formData.establishmentId) 
-                })
-            };
+            // Faz a requisição POST para o endpoint do backend
+            const response = await axios.post('http://localhost:8080/users', userData);
 
-            const response = await register(userData);
-            console.log('Registro bem-sucedido:', response);
-            
-            setSuccess('Cadastro realizado com sucesso! Redirecionando para login...');
-            
-            // Limpa o formulário
-            setFormData({
-                username: '',
-                password: '',
-                confirmPassword: '',
-                email: '',
-                establishmentId: ''
-            });
-
-            // Redireciona após 2 segundos
-            setTimeout(() => {
-                if (onRegisterSuccess) {
-                    onRegisterSuccess();
-                } else if (onBackToLogin) {
-                    onBackToLogin();
-                }
-            }, 2000);
-
-        } catch (error) {
-            console.error('Erro no registro:', error);
-            
-            if (error.status === 400) {
-                setError(error.message || 'Dados inválidos. Verifique os campos.');
-            } else if (error.status === 409) {
-                setError('Nome de usuário já existe. Escolha outro.');
-            } else if (error.status === 500) {
-                setError('Erro no servidor. Tente novamente mais tarde.');
-            } else if (error.message) {
-                setError(error.message);
-            } else {
-                setError('Erro ao realizar cadastro. Verifique sua conexão.');
+            // Se a resposta for 201 Created...
+            if (response.status === 201) {
+                alert('Usuário cadastrado com sucesso!');
+                navigate('/login'); // Redireciona para a tela de login
             }
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            // Se o backend retornar um erro (ex: username já existe)
+            if (err.response && err.response.data) {
+                // A mensagem de erro que definimos no backend
+                setError(err.response.data.message || 'Erro ao cadastrar. Tente novamente.');
+            } else {
+                setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
+            }
         }
     };
 
     return (
         <div className="register-container">
-            <form onSubmit={handleSubmit} className="register-form">
-                <h2>Cadastro</h2>
-                
-                {error && <div className="error-message">{error}</div>}
-                {success && <div className="success-message">{success}</div>}
-                
+            <form className="register-form" onSubmit={handleSubmit}>
+                <h2>Cadastro de Usuário</h2>
+
+                {error && <p className="error-message">{error}</p>}
+
                 <div className="form-group">
-                    <label htmlFor="username">Usuário: *</label>
+                    <label htmlFor="username">Usuário:</label>
                     <input
-                        id="username"
-                        name="username"
                         type="text"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="Digite seu usuário"
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         required
-                        disabled={loading}
-                        minLength={3}
                     />
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="email">Email:</label>
+                    <label htmlFor="password">Senha:</label>
                     <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Digite seu email (opcional)"
-                        disabled={loading}
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label htmlFor="password">Senha: *</label>
-                    <input
+                        type="password"
                         id="password"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Mínimo 6 caracteres"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
-                        disabled={loading}
-                        minLength={6}
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirmar Senha: *</label>
-                    <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="Digite a senha novamente"
-                        required
-                        disabled={loading}
-                        minLength={6}
                     />
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="establishmentId">ID do Estabelecimento:</label>
-                    <input
-                        id="establishmentId"
-                        name="establishmentId"
-                        type="number"
-                        value={formData.establishmentId}
-                        onChange={handleChange}
-                        placeholder="ID (opcional)"
-                        disabled={loading}
-                        min={1}
-                    />
-                </div>
-                
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Cadastrando...' : 'Cadastrar'}
-                </button>
-
-                {onBackToLogin && (
-                    <button 
-                        type="button" 
-                        onClick={onBackToLogin}
-                        className="back-button"
-                        disabled={loading}
+                    <label htmlFor="role">Função:</label>
+                    <select
+                        id="role"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
                     >
-                        Voltar para Login
-                    </button>
-                )}
+                        <option value="ROLE_EMPLOYEE">Funcionário</option>
+                        <option value="ROLE_OWNER">Proprietário</option>
+                    </select>
+                </div>
+
+                <button type="submit" className="register-button">Cadastrar</button>
             </form>
         </div>
     );

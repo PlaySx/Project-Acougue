@@ -1,109 +1,44 @@
 package br.com.acougue.dto;
 
+import br.com.acougue.enums.OrderStatus;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import br.com.acougue.enums.OrderStatus;
-
 public class OrderResponseDTO {
 
-	private Long id;
-	private LocalDateTime datahora;
-	private OrderStatus status;
-	private String paymentMethod;
-	private String observacao;
-	private String clientName;
-	private String establishmentName;
-	private List<ProductResponseDTO> products;
-	private Double totalValue;
+    private Long id;
+    private LocalDateTime datahora;
+    private OrderStatus status;
+    private String paymentMethod;
+    private String observation;
+    private String clientName;
+    private String establishmentName;
+    private List<OrderItemResponseDTO> items; // Alterado de List<ProductResponseDTO>
+    private BigDecimal totalValue; // Alterado de Double
 
-	public OrderResponseDTO() {
-	}
+    public OrderResponseDTO(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod,
+                            String observation, String clientName, String establishmentName,
+                            List<OrderItemResponseDTO> items, BigDecimal totalValue) {
+        this.id = id;
+        this.datahora = datahora;
+        this.status = status;
+        this.paymentMethod = paymentMethod;
+        this.observation = observation;
+        this.clientName = clientName;
+        this.establishmentName = establishmentName;
+        this.items = items;
+        this.totalValue = totalValue;
+    }
 
-	public OrderResponseDTO(Long id, LocalDateTime datahora, OrderStatus status, String paymentMethod,
-			String observacao, String clientName, String establishmentName, List<ProductResponseDTO> products,
-			Double totalValue) {
-		this.id = id;
-		this.datahora = datahora;
-		this.status = status;
-		this.paymentMethod = paymentMethod;
-		this.observacao = observacao;
-		this.clientName = clientName;
-		this.establishmentName = establishmentName;
-		this.products = products;
-		this.totalValue = totalValue;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public LocalDateTime getDatahora() {
-		return datahora;
-	}
-
-	public void setDatahora(LocalDateTime datahora) {
-		this.datahora = datahora;
-	}
-
-	public OrderStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(OrderStatus status) {
-		this.status = status;
-	}
-
-	public String getPaymentMethod() {
-		return paymentMethod;
-	}
-
-	public void setPaymentMethod(String paymentMethod) {
-		this.paymentMethod = paymentMethod;
-	}
-
-	public String getObservacao() {
-		return observacao;
-	}
-
-	public void setObservacao(String observacao) {
-		this.observacao = observacao;
-	}
-
-	public String getClientName() {
-		return clientName;
-	}
-
-	public void setClientName(String clientName) {
-		this.clientName = clientName;
-	}
-
-	public String getEstablishmentName() {
-		return establishmentName;
-	}
-
-	public void setEstablishmentName(String establishmentName) {
-		this.establishmentName = establishmentName;
-	}
-
-	public List<ProductResponseDTO> getProducts() {
-		return products;
-	}
-
-	public void setProducts(List<ProductResponseDTO> products) {
-		this.products = products;
-	}
-
-	public Double getTotalValue() {
-		return totalValue;
-	}
-
-	public void setTotalValue(Double totalValue) {
-		this.totalValue = totalValue;
-	}
-
+    // Getters
+    public Long getId() { return id; }
+    public LocalDateTime getDatahora() { return datahora; }
+    public OrderStatus getStatus() { return status; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public String getObservation() { return observation; }
+    public String getClientName() { return clientName; }
+    public String getEstablishmentName() { return establishmentName; }
+    public List<OrderItemResponseDTO> getItems() { return items; }
+    public BigDecimal getTotalValue() { return totalValue; }
 }

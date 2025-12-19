@@ -1,72 +1,62 @@
 package br.com.acougue.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class ClientRequestDTO {
 
-	private String name;
-	private Long numberPhone;
-	private String address;
-	private String addressNeighborhood;
-	private String observation;
-	private Long establishmentId;
+    @NotBlank(message = "O nome é obrigatório")
+    @Size(min = 3, message = "O nome deve ter no mínimo 3 caracteres")
+    private String name;
 
-	public ClientRequestDTO() {
-	}
+    @NotNull(message = "O número de telefone é obrigatório")
+    private Long numberPhone;
 
-	public ClientRequestDTO(String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, Long establishmentId) {
-		this.name = name;
-		this.numberPhone = numberPhone;
-		this.address = address;
-		this.addressNeighborhood = addressNeighborhood;
-		this.observation = observation;
-		this.establishmentId = establishmentId;
-	}
+    @NotBlank(message = "O endereço é obrigatório")
+    private String address;
 
-	public String getName() {
-		return name;
-	}
+    private String addressNeighborhood;
+    private String observation;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    @NotNull(message = "O ID do estabelecimento é obrigatório")
+    private Long establishmentId;
 
-	public Long getNumberPhone() {
-		return numberPhone;
-	}
-
-	public void setNumberPhone(Long numberPhone) {
-		this.numberPhone = numberPhone;
-	}
-
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public String getAddressNeighborhood() {
-		return addressNeighborhood;
-	}
-
-	public void setAddressNeighborhood(String addressNeighborhood) {
-		this.addressNeighborhood = addressNeighborhood;
-	}
-
-	public String getObservation() {
-		return observation;
-	}
-
-	public void setObservation(String observation) {
-		this.observation = observation;
-	}
-
-	public Long getEstablishmentId() {
-		return establishmentId;
-	}
-
-	public void setEstablishmentId(Long establishmentId) {
-		this.establishmentId = establishmentId;
-	}
+    // Getters e Setters
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public Long getNumberPhone() {
+        return numberPhone;
+    }
+    public void setNumberPhone(Long numberPhone) {
+        this.numberPhone = numberPhone;
+    }
+    public String getAddress() {
+        return address;
+    }
+    public void setAddress(String address) {
+        this.address = address;
+    }
+    public String getAddressNeighborhood() {
+        return addressNeighborhood;
+    }
+    public void setAddressNeighborhood(String addressNeighborhood) {
+        this.addressNeighborhood = addressNeighborhood;
+    }
+    public String getObservation() {
+        return observation;
+    }
+    public void setObservation(String observation) {
+        this.observation = observation;
+    }
+    public Long getEstablishmentId() {
+        return establishmentId;
+    }
+    public void setEstablishmentId(Long establishmentId) {
+        this.establishmentId = establishmentId;
+    }
 }

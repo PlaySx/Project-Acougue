@@ -1,33 +1,35 @@
 package br.com.acougue.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * DTO para autenticação de estabelecimentos
- * Contém apenas username e password para login
+ * DTO para autenticação de usuários e estabelecimentos.
+ * Usa um campo genérico 'login' que pode ser email ou username.
  */
 public class LoginDTO {
     
-    @NotBlank(message = "O campo username é obrigatório")
-    private String username;
+    @NotBlank(message = "O campo de login é obrigatório")
+    private String login; // Campo genérico para email ou username
+
     @NotBlank(message = "O campo password é obrigatório")
     private String password;
 
     // Construtores
     public LoginDTO() {}
 
-    public LoginDTO(String username, String password) {
-        this.username = username;
+    public LoginDTO(String login, String password) {
+        this.login = login;
         this.password = password;
     }
 
     // Getters e Setters
-    public String getUsername() {
-        return username;
+    public String getLogin() {
+        return login;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     public String getPassword() {
@@ -41,7 +43,7 @@ public class LoginDTO {
     @Override
     public String toString() {
         return "LoginDTO{" +
-                "username='" + username + '\'' +
+                "login='" + login + '\'' +
                 '}'; // Não inclui password no toString por segurança
     }
 }
