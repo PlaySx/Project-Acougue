@@ -1,92 +1,36 @@
 package br.com.acougue.dto;
 
+import java.util.List;
+
 public class ClientResponseDTO {
 
 	private Long id;
 	private String name;
-	private Long numberPhone;
+    private List<PhoneNumberDTO> phoneNumbers;
 	private String address;
 	private String addressNeighborhood;
 	private String observation;
 	private Long establishmentId;
-	private Integer totalOrders;
+	private int orderCount;
 
-	public ClientResponseDTO() {
-	}
-
-	public ClientResponseDTO(Long id, String name, Long numberPhone, String address, String addressNeighborhood,
-			String observation, Long establishmentId, Integer totalOrders) {
+	public ClientResponseDTO(Long id, String name, List<PhoneNumberDTO> phoneNumbers, String address, String addressNeighborhood, String observation, Long establishmentId, int orderCount) {
 		this.id = id;
 		this.name = name;
-		this.numberPhone = numberPhone;
+        this.phoneNumbers = phoneNumbers;
 		this.address = address;
 		this.addressNeighborhood = addressNeighborhood;
 		this.observation = observation;
 		this.establishmentId = establishmentId;
-		this.totalOrders = totalOrders;
+		this.orderCount = orderCount;
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Long getNumberPhone() {
-		return numberPhone;
-	}
-
-	public void setNumberPhone(Long numberPhone) {
-		this.numberPhone = numberPhone;
-	}
-
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public String getAddressNeighborhood() {
-		return addressNeighborhood;
-	}
-
-	public void setAddressNeighborhood(String addressNeighborhood) {
-		this.addressNeighborhood = addressNeighborhood;
-	}
-
-	public String getObservation() {
-		return observation;
-	}
-
-	public void setObservation(String observation) {
-		this.observation = observation;
-	}
-
-	public Long getEstablishmentId() {
-		return establishmentId;
-	}
-
-	public void setEstablishmentId(Long establishmentId) {
-		this.establishmentId = establishmentId;
-	}
-
-	public Integer getTotalOrders() {
-		return totalOrders;
-	}
-
-	public void setTotalOrders(Integer totalOrders) {
-		this.totalOrders = totalOrders;
-	}
+	// Getters
+	public Long getId() { return id; }
+	public String getName() { return name; }
+    public List<PhoneNumberDTO> getPhoneNumbers() { return phoneNumbers; }
+	public String getAddress() { return address; }
+	public String getAddressNeighborhood() { return addressNeighborhood; }
+	public String getObservation() { return observation; }
+	public Long getEstablishmentId() { return establishmentId; }
+	public int getOrderCount() { return orderCount; }
 }

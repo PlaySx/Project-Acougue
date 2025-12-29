@@ -1,8 +1,11 @@
 package br.com.acougue.services;
 
+import br.com.acougue.dto.DailyRevenueDTO;
 import br.com.acougue.dto.DashboardDataDTO;
 import br.com.acougue.dto.TopProductDTO;
+import br.com.acougue.entities.Order;
 import br.com.acougue.enums.OrderStatus;
+import br.com.acougue.mapper.OrderMapper;
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.OrderRepository;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -20,24 +24,29 @@ public class DashboardService {
 
     private final OrderRepository orderRepository;
     private final ClientRepository clientRepository;
+    private final OrderMapper orderMapper;
 
-    public DashboardService(OrderRepository orderRepository, ClientRepository clientRepository) {
+    public DashboardService(OrderRepository orderRepository, ClientRepository clientRepository, OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.clientRepository = clientRepository;
+        this.orderMapper = orderMapper;
     }
 
-    public DashboardDataDTO getDashboardData(Long establishmentId) {
+    public DashboardDataDTO getDashboardData(Long establishmentId, LocalDate startDate, LocalDate endDate) {
+        // Define o período padrão como "hoje" se nenhuma data for fornecida
+        LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : LocalDate.now().atStartOfDay();
+        LocalDateTime end = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDate.now().atTime(LocalTime.MAX);
+
         DashboardDataDTO data = new DashboardDataDTO();
-        LocalDate today = LocalDate.now();
 
-        // KPIs
-        Long totalOrdersToday = orderRepository.countByEstablishmentIdAndDatahoraBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
-        BigDecimal totalRevenueToday = orderRepository.sumTotalValueByEstablishmentIdAndDatahoraBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
-        Long newClientsToday = clientRepository.countByEstablishmentIdAndCreatedAtBetween(establishmentId, today.atStartOfDay(), today.atTime(LocalTime.MAX));
+        // KPIs para o período selecionado
+        Long totalOrders = orderRepository.countByEstablishmentIdAndDatahoraBetween(establishmentId, start, end);
+        BigDecimal totalRevenue = orderRepository.sumTotalValueByEstablishmentIdAndDatahoraBetween(establishmentId, start, end);
+        Long newClients = clientRepository.countByEstablishmentIdAndCreatedAtBetween(establishmentId, start, end);
 
-        data.setTotalOrdersToday(totalOrdersToday != null ? totalOrdersToday : 0L);
-        data.setTotalRevenueToday(totalRevenueToday != null ? totalRevenueToday : BigDecimal.ZERO);
-        data.setNewClientsToday(newClientsToday != null ? newClientsToday : 0L);
+        data.setTotalOrdersToday(totalOrders != null ? totalOrders : 0L);
+        data.setTotalRevenueToday(totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
+        data.setNewClientsToday(newClients != null ? newClients : 0L);
 
         if (data.getTotalOrdersToday() > 0 && data.getTotalRevenueToday().compareTo(BigDecimal.ZERO) > 0) {
             data.setAverageTicketToday(data.getTotalRevenueToday().divide(BigDecimal.valueOf(data.getTotalOrdersToday()), 2, BigDecimal.ROUND_HALF_UP));
@@ -45,16 +54,23 @@ public class DashboardService {
             data.setAverageTicketToday(BigDecimal.ZERO);
         }
 
-        // Gráfico de Status
-        Map<OrderStatus, Long> rawStatusCount = orderRepository.countByEstablishmentIdGroupByStatus(establishmentId);
-        Map<String, Long> safeStatusCount = rawStatusCount.entrySet().stream()
+        // Gráficos para o período selecionado
+        Map<String, Long> safeStatusCount = orderRepository.countByEstablishmentIdAndDatahoraBetweenGroupByStatus(establishmentId, start, end)
+                .entrySet().stream()
                 .filter(entry -> entry.getKey() != null)
                 .collect(Collectors.toMap(entry -> entry.getKey().name(), Map.Entry::getValue));
         data.setOrderStatusCount(safeStatusCount);
 
-        // Gráfico de Top Produtos
-        List<TopProductDTO> topProducts = orderRepository.findTopSellingProducts(establishmentId, PageRequest.of(0, 5));
+        List<TopProductDTO> topProducts = orderRepository.findTopSellingProducts(establishmentId, start, end, PageRequest.of(0, 5));
         data.setTopSellingProducts(topProducts);
+
+        // O gráfico de faturamento diário sempre mostrará os dias dentro do período selecionado
+        List<DailyRevenueDTO> dailyRevenue = orderRepository.findDailyRevenue(establishmentId, start, end);
+        data.setWeeklyRevenue(dailyRevenue);
+
+        // Tabela de Pedidos Recentes (continua mostrando os mais recentes independente do filtro)
+        List<Order> recentOrders = orderRepository.findRecentOrdersByEstablishmentId(establishmentId, LocalDate.now().minusDays(30).atStartOfDay());
+        data.setRecentOrders(orderMapper.toResponseDTOList(recentOrders.stream().limit(5).collect(Collectors.toList())));
 
         return data;
     }

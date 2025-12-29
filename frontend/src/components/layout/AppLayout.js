@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -65,7 +65,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-const defaultTheme = createTheme();
+// Removido: const defaultTheme = createTheme();
 
 export default function AppLayout({ children }) {
   const [open, setOpen] = React.useState(true);
@@ -76,7 +76,7 @@ export default function AppLayout({ children }) {
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
+    // Removido: <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <AppBar position="absolute" open={open}>
@@ -105,7 +105,7 @@ export default function AppLayout({ children }) {
             
             {isAuthenticated ? (
               <>
-                <Typography sx={{ mx: 2 }}>Olá, {user?.name || 'Usuário'}!</Typography>
+                <Typography sx={{ mx: 2 }}>Olá, {user?.establishmentName || 'Usuário'}!</Typography>
                 <IconButton color="inherit">
                   <Badge badgeContent={4} color="secondary">
                     <NotificationsIcon />
@@ -159,11 +159,10 @@ export default function AppLayout({ children }) {
         >
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {/* É AQUI QUE O CONTEÚDO DAS SUAS PÁGINAS SERÁ RENDERIZADO */}
             {children}
           </Container>
         </Box>
       </Box>
-    </ThemeProvider>
+    // Removido: </ThemeProvider>
   );
 }

@@ -12,9 +12,8 @@ import java.util.List;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
-    List<Client> findByEstablishmentId(Long establishmentId);
-    List<Client> findByNameContainingIgnoreCaseAndEstablishmentId(String name, Long establishmentId);
-    boolean existsByNumberPhoneAndEstablishmentId(Long numberPhone, Long establishmentId);
+    // Verifica se existe algum cliente que tenha um número de telefone com o número fornecido
+    boolean existsByPhoneNumbersNumber(String number);
 
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId")
     Long countByEstablishmentId(@Param("establishmentId") Long establishmentId);
@@ -22,8 +21,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId AND c.createdAt BETWEEN :start AND :end")
     Long countByEstablishmentIdAndCreatedAtBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // --- QUERY DE FILTRO AVANÇADO ATUALIZADA ---
-    // Trocamos 'observation' por 'neighborhood' (addressNeighborhood)
     @Query("SELECT DISTINCT c FROM Client c " +
            "LEFT JOIN c.orders o " +
            "LEFT JOIN o.items oi " +
@@ -39,7 +36,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             @Param("establishmentId") Long establishmentId,
             @Param("name") String name,
             @Param("address") String address,
-            @Param("neighborhood") String neighborhood, // Novo parâmetro
+            @Param("neighborhood") String neighborhood,
             @Param("productName") String productName,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate

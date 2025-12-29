@@ -1,15 +1,17 @@
 package br.com.acougue.mapper;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.stereotype.Component;
-
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
+import br.com.acougue.dto.PhoneNumberDTO;
 import br.com.acougue.entities.Client;
 import br.com.acougue.entities.Establishment;
+import br.com.acougue.entities.PhoneNumber;
 import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.repository.EstablishmentRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ClientMapper {
@@ -19,35 +21,41 @@ public class ClientMapper {
         this.establishmentRepository = establishmentRepository;
     }
     
-    // Converte DTO de request para entidade
     public Client toEntity(ClientRequestDTO dto) {
         if (dto == null) return null;
         
         Client client = new Client();
         client.setName(dto.getName());
-        client.setNumberPhone(dto.getNumberPhone());
         client.setAddress(dto.getAddress());
         client.setAddressNeighborhood(dto.getAddressNeighborhood());
         client.setObservation(dto.getObservation());
         
-        // Busca o estabelecimento pelo ID
-        if (dto.getEstablishmentId() != null) {
-            Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
-            client.setEstablishment(establishment);
-        }
+        dto.getPhoneNumbers().forEach(phoneDto -> {
+            PhoneNumber phone = new PhoneNumber();
+            phone.setType(phoneDto.getType());
+            phone.setNumber(phoneDto.getNumber());
+            phone.setPrimary(phoneDto.isPrimary());
+            client.addPhoneNumber(phone);
+        });
+        
+        Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
+            .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
+        client.setEstablishment(establishment);
         
         return client;
     }
     
-    // Converte entidade para DTO de response
     public ClientResponseDTO toResponseDTO(Client entity) {
         if (entity == null) return null;
         
+        List<PhoneNumberDTO> phoneDTOs = entity.getPhoneNumbers().stream()
+            .map(phone -> new PhoneNumberDTO(phone.getType(), phone.getNumber(), phone.isPrimary()))
+            .collect(Collectors.toList());
+
         return new ClientResponseDTO(
             entity.getId(),
             entity.getName(),
-            entity.getNumberPhone(),
+            phoneDTOs,
             entity.getAddress(),
             entity.getAddressNeighborhood(),
             entity.getObservation(),
@@ -56,24 +64,26 @@ public class ClientMapper {
         );
     }
     
-    // Atualiza entidade existente com dados do DTO
     public void updateEntityFromDTO(Client entity, ClientRequestDTO dto) {
         if (entity == null || dto == null) return;
         
         entity.setName(dto.getName());
-        entity.setNumberPhone(dto.getNumberPhone());
         entity.setAddress(dto.getAddress());
         entity.setAddressNeighborhood(dto.getAddressNeighborhood());
         entity.setObservation(dto.getObservation());
-        
-        if (dto.getEstablishmentId() != null) {
-            Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com o ID: " + dto.getEstablishmentId()));
-            entity.setEstablishment(establishment);
-        }
+
+        // Lógica complexa de atualização de telefones (simplificada aqui)
+        // A abordagem mais segura seria limpar e adicionar os novos.
+        entity.getPhoneNumbers().clear();
+        dto.getPhoneNumbers().forEach(phoneDto -> {
+            PhoneNumber phone = new PhoneNumber();
+            phone.setType(phoneDto.getType());
+            phone.setNumber(phoneDto.getNumber());
+            phone.setPrimary(phoneDto.isPrimary());
+            entity.addPhoneNumber(phone);
+        });
     }
     
-    // Converte lista de entidades para lista de DTOs de response
     public List<ClientResponseDTO> toResponseDTOList(List<Client> entities) {
         if (entities == null) return null;
         

@@ -13,8 +13,9 @@ export function AuthProvider({ children }) {
     const decodedToken = jwtDecode(token);
     setUser({ 
       email: decodedToken.sub, 
-      role: decodedToken.role, // Adiciona a role ao objeto do usuário
-      establishmentId: decodedToken.establishmentId 
+      role: decodedToken.role,
+      establishmentId: decodedToken.establishmentId,
+      establishmentName: decodedToken.establishmentName // Adicionado
     });
     setIsAuthenticated(true);
   };

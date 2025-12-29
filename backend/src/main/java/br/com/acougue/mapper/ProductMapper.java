@@ -29,6 +29,7 @@ public class ProductMapper {
         product.setCategory(dto.getCategory());
         product.setPricingType(dto.getPricingType());
         product.setUnitPrice(dto.getUnitPrice());
+        product.setStockQuantity(dto.getStockQuantity());
         
         Establishment establishment = establishmentRepository.findById(dto.getEstablishmentId())
             .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com id: " + dto.getEstablishmentId()));
@@ -47,6 +48,7 @@ public class ProductMapper {
             entity.getCategory(),
             entity.getPricingType(),
             entity.getUnitPrice(),
+            entity.getStockQuantity(),
             entity.getEstablishment() != null ? entity.getEstablishment().getId() : null
         );
     }
@@ -59,6 +61,7 @@ public class ProductMapper {
         entity.setCategory(dto.getCategory());
         entity.setPricingType(dto.getPricingType());
         entity.setUnitPrice(dto.getUnitPrice());
+        entity.setStockQuantity(dto.getStockQuantity());
     }
     
     public List<ProductResponseDTO> toResponseDTOList(List<Product> entities) {

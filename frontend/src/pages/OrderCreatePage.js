@@ -11,13 +11,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 function QuantityDialog({ open, onClose, onSubmit, product }) {
   const [value, setValue] = useState('');
   const isPerKg = product?.pricingType === 'PER_KG';
-  const label = isPerKg ? "Peso em gramas (g)" : "Quantidade";
+  const label = isPerKg ? "Peso em gramas (g)" : "Quantidade (unidades)";
 
   const handleSubmit = () => {
     const numValue = parseInt(value, 10);
     if (numValue > 0) {
       onSubmit(isPerKg ? { weightInGrams: numValue } : { quantity: numValue });
       onClose();
+      setValue('');
     }
   };
 
@@ -75,14 +76,14 @@ export default function OrderCreatePage() {
 
   const handleQuantitySubmit = (values) => {
     const { weightInGrams, quantity } = values;
-    const price = (productForDialog.unitPrice * (weightInGrams ? weightInGrams / 1000 : quantity)).toFixed(2);
+    const price = (productForDialog.unitPrice * (weightInGrams ? weightInGrams / 1000 : quantity));
 
     setOrderItems([...orderItems, {
       productId: productForDialog.id,
       name: productForDialog.name,
       weightInGrams,
       quantity,
-      price: parseFloat(price),
+      price: parseFloat(price.toFixed(2)),
     }]);
   };
 
@@ -125,7 +126,7 @@ export default function OrderCreatePage() {
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <Autocomplete options={clients} getOptionLabel={(c) => c.name || ''} value={selectedClient} onChange={(_, v) => setSelectedClient(v)} renderInput={(params) => <TextField {...params} label="Selecione um Cliente" required />} />
           <Divider>Produtos</Divider>
-          <Autocomplete options={products} getOptionLabel={(p) => `${p.name} - R$ ${p.unitPrice.toFixed(2)} / ${p.pricingType === 'PER_KG' ? 'kg' : 'un'}`} onChange={(_, v) => handleAddProduct(v)} renderInput={(params) => <TextField {...params} label="Adicionar Produto" />} value={null} />
+          <Autocomplete options={products} getOptionLabel={(p) => `${p.name} - R$ ${p.unitPrice.toFixed(2)} / ${p.pricingType === 'PER_KG' ? 'kg' : 'un'} (${p.stockQuantity} ${p.pricingType === 'PER_KG' ? 'g' : 'un'} em estoque)`} onChange={(_, v) => handleAddProduct(v)} renderInput={(params) => <TextField {...params} label="Adicionar Produto" />} value={null} />
           
           <List>
             {orderItems.map((item) => (

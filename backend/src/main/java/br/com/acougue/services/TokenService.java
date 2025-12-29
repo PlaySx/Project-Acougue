@@ -24,8 +24,9 @@ public class TokenService {
             String token = JWT.create()
                     .withIssuer("acougue-api")
                     .withSubject(user.getEmail())
-                    .withClaim("role", user.getRole().name()) // Adiciona a role do usuário
+                    .withClaim("role", user.getRole().name())
                     .withClaim("establishmentId", user.getEstablishment() != null ? user.getEstablishment().getId() : null)
+                    .withClaim("establishmentName", user.getEstablishment() != null ? user.getEstablishment().getName() : "N/A") // Adicionado
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
             return token;

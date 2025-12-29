@@ -14,6 +14,7 @@ export default function ProductCreatePage() {
     category: 'CARNES',
     pricingType: 'PER_KG',
     unitPrice: '',
+    stockQuantity: 0,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -29,7 +30,7 @@ export default function ProductCreatePage() {
     setSuccess('');
 
     if (!user?.establishmentId) {
-      setError('Usuário não está associado a um estabelecimento.');
+      setError('Usuário não associado a um estabelecimento.');
       return;
     }
 
@@ -39,7 +40,7 @@ export default function ProductCreatePage() {
       const response = await apiClient.post('/products', productData);
       if (response.status === 201) {
         setSuccess('Produto cadastrado com sucesso!');
-        setFormData({ name: '', description: '', category: 'CARNES', pricingType: 'PER_KG', unitPrice: '' });
+        setFormData({ name: '', description: '', category: 'CARNES', pricingType: 'PER_KG', unitPrice: '', stockQuantity: 0 });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Ocorreu um erro ao cadastrar o produto.');
@@ -69,6 +70,7 @@ export default function ProductCreatePage() {
             </TextField>
           </FormControl>
           <TextField label={formData.pricingType === 'PER_KG' ? 'Preço por KG (R$)' : 'Preço da Unidade (R$)'} name="unitPrice" type="number" value={formData.unitPrice} onChange={handleChange} required fullWidth />
+          <TextField label={formData.pricingType === 'PER_KG' ? 'Estoque (em gramas)' : 'Estoque (unidades)'} name="stockQuantity" type="number" value={formData.stockQuantity} onChange={handleChange} required fullWidth />
           <Button type="submit" variant="contained" color="primary" size="large" sx={{ mt: 2 }}>Salvar Produto</Button>
         </Box>
       </Box>

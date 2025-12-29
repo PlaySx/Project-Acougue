@@ -30,7 +30,10 @@ public class Product {
 	private PricingType pricingType;
 
 	@Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
-	private BigDecimal unitPrice; // Preço por KG ou por Unidade
+	private BigDecimal unitPrice;
+
+	@Column(name = "stock_quantity", nullable = false)
+	private Integer stockQuantity = 0; // Em gramas para PER_KG, em unidades para PER_UNIT
 	
 	@ManyToOne
 	@JoinColumn(name = "establishment_id")
@@ -52,6 +55,8 @@ public class Product {
 	public void setPricingType(PricingType pricingType) { this.pricingType = pricingType; }
 	public BigDecimal getUnitPrice() { return unitPrice; }
 	public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+	public Integer getStockQuantity() { return stockQuantity; }
+	public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
 	public Establishment getEstablishment() { return establishment; }
 	public void setEstablishment(Establishment establishment) { this.establishment = establishment; }
 
@@ -71,7 +76,7 @@ public class Product {
         return "Product{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", unitPrice=" + unitPrice +
+                ", stockQuantity=" + stockQuantity +
                 '}';
     }
 }

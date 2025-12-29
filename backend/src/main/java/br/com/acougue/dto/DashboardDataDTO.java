@@ -1,6 +1,5 @@
 package br.com.acougue.dto;
 
-import br.com.acougue.enums.OrderStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +11,11 @@ public class DashboardDataDTO {
     private Long newClientsToday;
     private BigDecimal averageTicketToday;
     private Map<String, Long> orderStatusCount;
-    
-    // Novo campo para o gráfico de produtos
     private List<TopProductDTO> topSellingProducts;
+    private List<DailyRevenueDTO> weeklyRevenue;
+
+    // Novo campo para a lista de pedidos recentes
+    private List<OrderResponseDTO> recentOrders;
 
     public DashboardDataDTO() {}
 
@@ -36,4 +37,10 @@ public class DashboardDataDTO {
 
     public List<TopProductDTO> getTopSellingProducts() { return topSellingProducts; }
     public void setTopSellingProducts(List<TopProductDTO> topSellingProducts) { this.topSellingProducts = topSellingProducts; }
+
+    public List<DailyRevenueDTO> getWeeklyRevenue() { return weeklyRevenue; }
+    public void setWeeklyRevenue(List<DailyRevenueDTO> weeklyRevenue) { this.weeklyRevenue = weeklyRevenue; }
+
+    public List<OrderResponseDTO> getRecentOrders() { return recentOrders; }
+    public void setRecentOrders(List<OrderResponseDTO> recentOrders) { this.recentOrders = recentOrders; }
 }

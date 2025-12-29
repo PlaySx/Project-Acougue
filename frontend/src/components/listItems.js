@@ -7,6 +7,9 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import SecurityIcon from '@mui/icons-material/Security';
+import SettingsIcon from '@mui/icons-material/Settings';
+import Divider from '@mui/material/Divider';
 
 export const mainListItems = (
   <React.Fragment>
@@ -36,6 +39,22 @@ export const mainListItems = (
         <ShoppingCartIcon />
       </ListItemIcon>
       <ListItemText primary="Produtos" />
+    </ListItemButton>
+
+    <Divider sx={{ my: 1 }} />
+
+    <ListItemButton component={RouterLink} to="/auditoria">
+      <ListItemIcon>
+        <SecurityIcon />
+      </ListItemIcon>
+      <ListItemText primary="Auditoria" />
+    </ListItemButton>
+
+    <ListItemButton component={RouterLink} to="/configuracoes">
+      <ListItemIcon>
+        <SettingsIcon />
+      </ListItemIcon>
+      <ListItemText primary="Configurações" />
     </ListItemButton>
   </React.Fragment>
 );

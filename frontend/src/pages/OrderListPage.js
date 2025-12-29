@@ -4,12 +4,13 @@ import apiClient from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import {
   Box, Container, Typography, Alert, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, CircularProgress,
+  TableContainer, TableHead, TableRow, Paper,
   TextField, Grid, MenuItem, Snackbar, Button
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import AddIcon from '@mui/icons-material/Add';
+import TableSkeleton from '../components/skeletons/TableSkeleton'; // 1. Importa o Skeleton
 
 const orderStatusOptions = [
   'PENDENTE', 'CONFIRMADO', 'EM_PREPARO', 'PRONTO', 'A_CAMINHO', 'ENTREGUE', 'CANCELADO'
@@ -36,7 +37,7 @@ export default function OrderListPage() {
       return;
     }
     try {
-      setLoading(true);
+      // setLoading(true); // Removido para evitar piscar durante o filtro, mas mantido no useEffect inicial
       const params = new URLSearchParams({ establishmentId: user.establishmentId });
       if (filters.clientName) params.append('clientName', filters.clientName);
       if (filters.status) params.append('status', filters.status);
@@ -52,6 +53,7 @@ export default function OrderListPage() {
   }, [user, filters]);
 
   useEffect(() => {
+    setLoading(true); // Garante que o skeleton apareça na primeira carga
     fetchOrders();
   }, [fetchOrders]);
 
@@ -78,6 +80,8 @@ export default function OrderListPage() {
     }
   };
 
+  const tableColumns = ['ID', 'Cliente', 'Data', 'Status', 'Valor Total'];
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -103,10 +107,12 @@ export default function OrderListPage() {
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Snackbar open={!!success} autoHideDuration={4000} onClose={() => setSuccess('')} message={success} />
 
-        {loading ? <CircularProgress /> : (
+        {loading ? (
+          <TableSkeleton columns={tableColumns} />
+        ) : (
           <TableContainer component={Paper}>
             <Table>
-              <TableHead><TableRow><TableCell>ID</TableCell><TableCell>Cliente</TableCell><TableCell>Data</TableCell><TableCell>Status</TableCell><TableCell align="right">Valor Total</TableCell></TableRow></TableHead>
+              <TableHead><TableRow>{tableColumns.map(col => <TableCell key={col}>{col}</TableCell>)}</TableRow></TableHead>
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order.id}>

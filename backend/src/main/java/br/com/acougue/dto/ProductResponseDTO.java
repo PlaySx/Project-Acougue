@@ -12,15 +12,17 @@ public class ProductResponseDTO {
 	private ProductCategory category;
 	private PricingType pricingType;
 	private BigDecimal unitPrice;
+	private Integer stockQuantity;
 	private Long establishmentId;
 
-	public ProductResponseDTO(Long id, String name, String description, ProductCategory category, PricingType pricingType, BigDecimal unitPrice, Long establishmentId) {
+	public ProductResponseDTO(Long id, String name, String description, ProductCategory category, PricingType pricingType, BigDecimal unitPrice, Integer stockQuantity, Long establishmentId) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
 		this.category = category;
 		this.pricingType = pricingType;
 		this.unitPrice = unitPrice;
+		this.stockQuantity = stockQuantity;
 		this.establishmentId = establishmentId;
 	}
 
@@ -31,5 +33,6 @@ public class ProductResponseDTO {
 	public ProductCategory getCategory() { return category; }
 	public PricingType getPricingType() { return pricingType; }
 	public BigDecimal getUnitPrice() { return unitPrice; }
+	public Integer getStockQuantity() { return stockQuantity; }
 	public Long getEstablishmentId() { return establishmentId; }
 }

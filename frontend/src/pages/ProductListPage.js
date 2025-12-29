@@ -11,6 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
+import TableSkeleton from '../components/skeletons/TableSkeleton';
 
 const categories = ['CARNES', 'BEBIDAS', 'MERCEARIA', 'PADARIA', 'FRIOS_E_LATICINIOS', 'HORTIFRUTI', 'OUTROS'];
 const pricingTypes = ['PER_KG', 'PER_UNIT'];
@@ -24,23 +25,16 @@ export default function ProductListPage() {
   const [success, setSuccess] = useState('');
   
   const [searchTerm, setSearchTerm] = useState('');
-
   const [editRowId, setEditRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
 
   const isOwner = user?.role === 'ROLE_OWNER';
 
   const fetchProducts = useCallback(async (query) => {
-    if (!user?.establishmentId) {
-      setError('Usuário não associado a um estabelecimento.');
-      setLoading(false);
-      return;
-    }
+    if (!user?.establishmentId) return;
     try {
-      setLoading(true);
       const params = new URLSearchParams({ establishmentId: user.establishmentId });
       if (query) params.append('name', query);
-      
       const response = await apiClient.get(`/products?${params.toString()}`);
       setProducts(response.data);
     } catch (err) {
@@ -51,16 +45,18 @@ export default function ProductListPage() {
   }, [user]);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchProducts(searchTerm);
-    }, 500);
-
+    setLoading(true);
+    const delayDebounceFn = setTimeout(() => { fetchProducts(searchTerm); }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, fetchProducts]);
 
   const handleEditClick = (product) => {
     setEditRowId(product.id);
-    setEditedRowData({ ...product });
+    // CONVERSÃO PARA KG AO EDITAR
+    const stockValueForEditing = product.pricingType === 'PER_KG' 
+      ? product.stockQuantity / 1000 
+      : product.stockQuantity;
+    setEditedRowData({ ...product, stockQuantity: stockValueForEditing });
   };
 
   const handleCancelClick = () => {
@@ -75,43 +71,47 @@ export default function ProductListPage() {
 
   const handleSaveClick = async (id) => {
     try {
-      const requestData = { ...editedRowData, unitPrice: parseFloat(editedRowData.unitPrice), establishmentId: user.establishmentId };
+      // CONVERSÃO DE VOLTA PARA GRAMAS AO SALVAR
+      const stockValueToSave = editedRowData.pricingType === 'PER_KG'
+        ? Math.round(parseFloat(editedRowData.stockQuantity) * 1000)
+        : parseInt(editedRowData.stockQuantity, 10);
+
+      const requestData = { 
+        ...editedRowData, 
+        stockQuantity: stockValueToSave,
+        establishmentId: user.establishmentId 
+      };
+      
       const response = await apiClient.put(`/products/${id}`, requestData);
       setProducts(prev => prev.map(p => (p.id === id ? response.data : p)));
       setSuccess('Produto atualizado com sucesso!');
       handleCancelClick();
     } catch (err) {
-      setError('Falha ao atualizar o produto.');
+      setError(err.response?.data?.message || 'Falha ao atualizar o produto.');
     }
   };
+
+  const tableColumns = ['ID', 'Nome', 'Preço', 'Estoque', 'Categoria', 'Tipo', 'Ações'];
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4" component="h1">
-            Gerenciamento de Produtos
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/produtos/novo')}
-          >
-            Novo Produto
-          </Button>
+          <Typography variant="h4" component="h1">Gerenciamento de Produtos</Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/produtos/novo')}>Novo Produto</Button>
         </Box>
 
         <Paper sx={{ p: 2, mb: 3 }}>
-          <TextField fullWidth label="Buscar por Nome ou ID do Produto" variant="outlined" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <TextField fullWidth label="Buscar por Nome ou ID" variant="outlined" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </Paper>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Snackbar open={!!success} autoHideDuration={4000} onClose={() => setSuccess('')} message={success} />
 
-        {loading && products.length === 0 ? <CircularProgress /> : (
+        {loading ? <TableSkeleton columns={tableColumns} /> : (
           <TableContainer component={Paper}>
             <Table>
-              <TableHead><TableRow><TableCell>ID</TableCell><TableCell>Nome</TableCell><TableCell>Preço</TableCell><TableCell>Categoria</TableCell><TableCell>Tipo</TableCell><TableCell>Ações</TableCell></TableRow></TableHead>
+              <TableHead><TableRow>{tableColumns.map(col => <TableCell key={col}>{col}</TableCell>)}</TableRow></TableHead>
               <TableBody>
                 {products.map((product) => {
                   const isEditMode = editRowId === product.id;
@@ -120,6 +120,13 @@ export default function ProductListPage() {
                       <TableCell>{product.id}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="name" value={editedRowData.name} onChange={handleInputChange} /> : product.name}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="unitPrice" type="number" value={editedRowData.unitPrice} onChange={handleInputChange} InputProps={{ readOnly: !isOwner }} helperText={!isOwner ? "Apenas proprietários" : ""}/> : `R$ ${product.unitPrice.toFixed(2)}`}</TableCell>
+                      <TableCell>
+                        {isEditMode ? (
+                          <TextField size="small" name="stockQuantity" type="number" value={editedRowData.stockQuantity} onChange={handleInputChange} helperText={product.pricingType === 'PER_KG' ? 'em kg' : 'em unidades'} />
+                        ) : (
+                          product.pricingType === 'PER_KG' ? `${(product.stockQuantity / 1000).toFixed(3)} kg` : `${product.stockQuantity} un`
+                        )}
+                      </TableCell>
                       <TableCell>{isEditMode ? <TextField select size="small" name="category" value={editedRowData.category} onChange={handleInputChange} sx={{ minWidth: 120 }}>{categories.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</TextField> : product.category}</TableCell>
                       <TableCell>{isEditMode ? <TextField select size="small" name="pricingType" value={editedRowData.pricingType} onChange={handleInputChange} sx={{ minWidth: 120 }}>{pricingTypes.map(p => <MenuItem key={p} value={p}>{p === 'PER_KG' ? 'Por Quilo' : 'Por Unidade'}</MenuItem>)}</TextField> : (product.pricingType === 'PER_KG' ? 'Por Quilo' : 'Por Unidade')}</TableCell>
                       <TableCell>{isEditMode ? (<><IconButton onClick={() => handleSaveClick(product.id)} color="primary"><SaveIcon /></IconButton><IconButton onClick={handleCancelClick}><CancelIcon /></IconButton></>) : (<IconButton onClick={() => handleEditClick(product)}><EditIcon /></IconButton>)}</TableCell>

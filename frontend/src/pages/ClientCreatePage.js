@@ -1,33 +1,41 @@
 import React, { useState } from 'react';
 import apiClient from '../api/axiosConfig';
-import { useAuth } from '../context/AuthContext'; // Importa o hook de autenticação
+import { useAuth } from '../context/AuthContext';
 import {
-  Box,
-  Button,
-  Container,
-  TextField,
-  Typography,
-  Alert,
+  Box, Button, Container, TextField, Typography, Alert,
+  IconButton, Grid, MenuItem, Select, FormControl, InputLabel
 } from '@mui/material';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 export default function ClientCreatePage() {
-  const { user } = useAuth(); // Pega os dados do usuário logado
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
-    numberPhone: '',
     address: '',
     addressNeighborhood: '',
     observation: '',
+    phoneNumbers: [{ type: 'CELULAR', number: '', isPrimary: true }]
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
+  const handlePhoneChange = (index, event) => {
+    const newPhones = [...formData.phoneNumbers];
+    newPhones[index][event.target.name] = event.target.value;
+    setFormData(prev => ({ ...prev, phoneNumbers: newPhones }));
+  };
+
+  const addPhoneField = () => {
+    setFormData(prev => ({
+      ...prev,
+      phoneNumbers: [...prev.phoneNumbers, { type: 'CELULAR', number: '', isPrimary: false }]
     }));
+  };
+
+  const removePhoneField = (index) => {
+    const newPhones = formData.phoneNumbers.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, phoneNumbers: newPhones }));
   };
 
   const handleSubmit = async (event) => {
@@ -40,23 +48,12 @@ export default function ClientCreatePage() {
       return;
     }
 
-    const clientData = {
-      ...formData,
-      establishmentId: user.establishmentId, // Usa o ID do estabelecimento do usuário logado
-    };
+    const clientData = { ...formData, establishmentId: user.establishmentId };
 
     try {
-      const response = await apiClient.post('/clients', clientData);
-      if (response.status === 201) {
-        setSuccess('Cliente cadastrado com sucesso!');
-        setFormData({
-          name: '',
-          numberPhone: '',
-          address: '',
-          addressNeighborhood: '',
-          observation: '',
-        });
-      }
+      await apiClient.post('/clients', clientData);
+      setSuccess('Cliente cadastrado com sucesso!');
+      setFormData({ name: '', address: '', addressNeighborhood: '', observation: '', phoneNumbers: [{ type: 'CELULAR', number: '', isPrimary: true }] });
     } catch (err) {
       setError(err.response?.data?.message || 'Ocorreu um erro ao cadastrar o cliente.');
     }
@@ -65,22 +62,30 @@ export default function ClientCreatePage() {
   return (
     <Container maxWidth="md">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Cadastrar Novo Cliente
-        </Typography>
-
+        <Typography variant="h4" component="h1" gutterBottom>Cadastrar Novo Cliente</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField label="Nome Completo" name="name" value={formData.name} onChange={handleChange} variant="outlined" margin="normal" required fullWidth />
-          <TextField label="Telefone" name="numberPhone" type="number" value={formData.numberPhone} onChange={handleChange} variant="outlined" margin="normal" required fullWidth />
-          <TextField label="Endereço" name="address" value={formData.address} onChange={handleChange} variant="outlined" margin="normal" required fullWidth />
-          <TextField label="Bairro" name="addressNeighborhood" value={formData.addressNeighborhood} onChange={handleChange} variant="outlined" margin="normal" fullWidth />
-          <TextField label="Observação" name="observation" value={formData.observation} onChange={handleChange} variant="outlined" margin="normal" fullWidth multiline rows={3} />
-          <Button type="submit" variant="contained" color="primary" size="large" sx={{ mt: 3 }}>
-            Salvar Cliente
-          </Button>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField label="Nome Completo" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required fullWidth />
+          
+          {formData.phoneNumbers.map((phone, index) => (
+            <Grid container spacing={1} key={index} alignItems="center">
+              <Grid item xs={4}>
+                <FormControl fullWidth><InputLabel>Tipo</InputLabel>
+                  <Select name="type" value={phone.type} onChange={(e) => handlePhoneChange(index, e)}><MenuItem value="CELULAR">Celular</MenuItem><MenuItem value="FIXO">Fixo</MenuItem><MenuItem value="WHATSAPP">WhatsApp</MenuItem><MenuItem value="OUTRO">Outro</MenuItem></Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={7}><TextField fullWidth label="Número" name="number" value={phone.number} onChange={(e) => handlePhoneChange(index, e)} required /></Grid>
+              <Grid item xs={1}><IconButton onClick={() => removePhoneField(index)} disabled={formData.phoneNumbers.length === 1}><RemoveCircleOutlineIcon /></IconButton></Grid>
+            </Grid>
+          ))}
+          <Button startIcon={<AddCircleOutlineIcon />} onClick={addPhoneField}>Adicionar Telefone</Button>
+
+          <TextField label="Endereço" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} required fullWidth />
+          <TextField label="Bairro" value={formData.addressNeighborhood} onChange={(e) => setFormData({...formData, addressNeighborhood: e.target.value})} fullWidth />
+          <TextField label="Observação" value={formData.observation} onChange={(e) => setFormData({...formData, observation: e.target.value})} fullWidth multiline rows={3} />
+          <Button type="submit" variant="contained" color="primary" size="large" sx={{ mt: 3 }}>Salvar Cliente</Button>
         </Box>
       </Box>
     </Container>

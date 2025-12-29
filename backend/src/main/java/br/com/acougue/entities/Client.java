@@ -21,8 +21,11 @@ public class Client {
 	@Column(name = "client_name")
 	private String name;
 
-	@Column(name = "number_phone")
-	private Long numberPhone;
+    // Campo antigo removido: private Long numberPhone;
+
+    // Nova relação OneToMany
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PhoneNumber> phoneNumbers = new ArrayList<>();
 
 	@Column(name = "client_address")
 	private String address;
@@ -53,13 +56,21 @@ public class Client {
 
 	public Client() {}
 
-	// Getters e Setters... (Omitidos para brevidade, mas devem existir)
+    // Método utilitário para adicionar telefone
+    public void addPhoneNumber(PhoneNumber phoneNumber) {
+        phoneNumbers.add(phoneNumber);
+        phoneNumber.setClient(this);
+    }
+
+	// Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public Long getNumberPhone() { return numberPhone; }
-    public void setNumberPhone(Long numberPhone) { this.numberPhone = numberPhone; }
+    
+    public List<PhoneNumber> getPhoneNumbers() { return phoneNumbers; }
+    public void setPhoneNumbers(List<PhoneNumber> phoneNumbers) { this.phoneNumbers = phoneNumbers; }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     public String getAddressNeighborhood() { return addressNeighborhood; }
@@ -88,6 +99,6 @@ public class Client {
 
     @Override
     public String toString() {
-        return "Client{" + "id=" + id + ", name='" + name + '\'' + ", numberPhone=" + numberPhone + '}';
+        return "Client{" + "id=" + id + ", name='" + name + '\'' + '}';
     }
 }
