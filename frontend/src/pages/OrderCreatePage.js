@@ -1,40 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import {
   Box, Button, Container, Typography, Alert, Autocomplete, TextField,
-  List, ListItem, ListItemText, IconButton, Divider, Dialog, DialogActions,
-  DialogContent, DialogTitle
+  List, ListItem, ListItemText, IconButton, Divider, createFilterOptions
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ClientQuickAddDialog from '../components/ClientQuickAddDialog';
+import QuantityDialog from '../components/QuantityDialog';
 
-function QuantityDialog({ open, onClose, onSubmit, product }) {
-  const [value, setValue] = useState('');
-  const isPerKg = product?.pricingType === 'PER_KG';
-  const label = isPerKg ? "Peso em gramas (g)" : "Quantidade (unidades)";
-
-  const handleSubmit = () => {
-    const numValue = parseInt(value, 10);
-    if (numValue > 0) {
-      onSubmit(isPerKg ? { weightInGrams: numValue } : { quantity: numValue });
-      onClose();
-      setValue('');
-    }
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Adicionar {product?.name}</DialogTitle>
-      <DialogContent>
-        <TextField autoFocus margin="dense" label={label} type="number" fullWidth variant="standard" value={value} onChange={(e) => setValue(e.target.value)} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit}>Adicionar</Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
+const filter = createFilterOptions();
 
 export default function OrderCreatePage() {
   const { user } = useAuth();
@@ -46,11 +22,24 @@ export default function OrderCreatePage() {
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
   
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [quantityDialogOpen, setQuantityDialogOpen] = useState(false);
   const [productForDialog, setProductForDialog] = useState(null);
+  
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const [clientInitialName, setClientInitialName] = useState('');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const fetchClients = useCallback(async () => {
+    if (!user?.establishmentId) return;
+    try {
+      const response = await apiClient.get(`/clients/advanced-search?establishmentId=${user.establishmentId}`);
+      setClients(response.data);
+    } catch (err) {
+      setError('Falha ao carregar clientes.');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user?.establishmentId) return;
@@ -70,21 +59,14 @@ export default function OrderCreatePage() {
   const handleAddProduct = (product) => {
     if (product) {
       setProductForDialog(product);
-      setDialogOpen(true);
+      setQuantityDialogOpen(true);
     }
   };
 
   const handleQuantitySubmit = (values) => {
     const { weightInGrams, quantity } = values;
     const price = (productForDialog.unitPrice * (weightInGrams ? weightInGrams / 1000 : quantity));
-
-    setOrderItems([...orderItems, {
-      productId: productForDialog.id,
-      name: productForDialog.name,
-      weightInGrams,
-      quantity,
-      price: parseFloat(price.toFixed(2)),
-    }]);
+    setOrderItems([...orderItems, { productId: productForDialog.id, name: productForDialog.name, weightInGrams, quantity, price: parseFloat(price.toFixed(2)) }]);
   };
 
   const calculateTotal = () => orderItems.reduce((total, item) => total + item.price, 0).toFixed(2);
@@ -124,13 +106,35 @@ export default function OrderCreatePage() {
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <Autocomplete options={clients} getOptionLabel={(c) => c.name || ''} value={selectedClient} onChange={(_, v) => setSelectedClient(v)} renderInput={(params) => <TextField {...params} label="Selecione um Cliente" required />} />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Autocomplete
+              sx={{ flexGrow: 1 }} // Faz o Autocomplete ocupar todo o espaço disponível
+              value={selectedClient}
+              onChange={(event, newValue) => {
+                setSelectedClient(newValue);
+              }}
+              options={clients}
+              getOptionLabel={(option) => option.name || ""}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => <TextField {...params} label="Buscar Cliente" required />}
+            />
+            <Button 
+              variant="outlined" 
+              sx={{ height: '56px', minWidth: '56px' }} 
+              onClick={() => setClientDialogOpen(true)}
+              title="Cadastrar Novo Cliente"
+            >
+              <PersonAddIcon />
+            </Button>
+          </Box>
+          
           <Divider>Produtos</Divider>
           <Autocomplete options={products} getOptionLabel={(p) => `${p.name} - R$ ${p.unitPrice.toFixed(2)} / ${p.pricingType === 'PER_KG' ? 'kg' : 'un'} (${p.stockQuantity} ${p.pricingType === 'PER_KG' ? 'g' : 'un'} em estoque)`} onChange={(_, v) => handleAddProduct(v)} renderInput={(params) => <TextField {...params} label="Adicionar Produto" />} value={null} />
           
           <List>
-            {orderItems.map((item) => (
-              <ListItem key={item.productId} secondaryAction={<IconButton edge="end" onClick={() => setOrderItems(orderItems.filter(i => i.productId !== item.productId))}><DeleteIcon /></IconButton>}>
+            {orderItems.map((item, index) => (
+              <ListItem key={`${item.productId}-${index}`} secondaryAction={<IconButton edge="end" onClick={() => setOrderItems(orderItems.filter((_, i) => i !== index))}><DeleteIcon /></IconButton>}>
                 <ListItemText primary={item.name} secondary={`${item.quantity ? `${item.quantity} un` : `${item.weightInGrams}g`} - R$ ${item.price.toFixed(2)}`} />
               </ListItem>
             ))}
@@ -143,7 +147,19 @@ export default function OrderCreatePage() {
           <Button type="submit" variant="contained" color="primary" size="large" sx={{ mt: 2 }}>Finalizar Pedido</Button>
         </Box>
       </Box>
-      {productForDialog && <QuantityDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleQuantitySubmit} product={productForDialog} />}
+      
+      {productForDialog && <QuantityDialog open={quantityDialogOpen} onClose={() => setQuantityDialogOpen(false)} onSubmit={handleQuantitySubmit} product={productForDialog} />}
+      
+      <ClientQuickAddDialog
+        open={clientDialogOpen}
+        onClose={() => setClientDialogOpen(false)}
+        onClientAdded={(newClient) => {
+          setClients(prev => [...prev, newClient]);
+          setSelectedClient(newClient);
+        }}
+        establishmentId={user?.establishmentId}
+        initialName=""
+      />
     </Container>
   );
 }

@@ -30,11 +30,20 @@ export default function ProductCreatePage() {
     setSuccess('');
 
     if (!user?.establishmentId) {
-      setError('Usuário não associado a um estabelecimento.');
+      setError('Usuário não está associado a um estabelecimento.');
       return;
     }
 
-    const productData = { ...formData, establishmentId: user.establishmentId };
+    // LÓGICA DE CONVERSÃO: Converte KG para Gramas antes de enviar
+    const stockValueToSave = formData.pricingType === 'PER_KG'
+      ? Math.round(parseFloat(formData.stockQuantity) * 1000)
+      : parseInt(formData.stockQuantity, 10);
+
+    const productData = { 
+      ...formData, 
+      stockQuantity: stockValueToSave,
+      establishmentId: user.establishmentId 
+    };
 
     try {
       const response = await apiClient.post('/products', productData);
@@ -70,7 +79,8 @@ export default function ProductCreatePage() {
             </TextField>
           </FormControl>
           <TextField label={formData.pricingType === 'PER_KG' ? 'Preço por KG (R$)' : 'Preço da Unidade (R$)'} name="unitPrice" type="number" value={formData.unitPrice} onChange={handleChange} required fullWidth />
-          <TextField label={formData.pricingType === 'PER_KG' ? 'Estoque (em gramas)' : 'Estoque (unidades)'} name="stockQuantity" type="number" value={formData.stockQuantity} onChange={handleChange} required fullWidth />
+          {/* Label dinâmico para o estoque */}
+          <TextField label={formData.pricingType === 'PER_KG' ? 'Estoque (em kg)' : 'Estoque (unidades)'} name="stockQuantity" type="number" value={formData.stockQuantity} onChange={handleChange} required fullWidth />
           <Button type="submit" variant="contained" color="primary" size="large" sx={{ mt: 2 }}>Salvar Produto</Button>
         </Box>
       </Box>

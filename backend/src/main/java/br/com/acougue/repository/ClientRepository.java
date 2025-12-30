@@ -12,8 +12,10 @@ import java.util.List;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
-    // Verifica se existe algum cliente que tenha um número de telefone com o número fornecido
     boolean existsByPhoneNumbersNumber(String number);
+    
+    // Novo método para evitar duplicatas de clientes sem telefone
+    boolean existsByNameAndPhoneNumbersIsNull(String name);
 
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId")
     Long countByEstablishmentId(@Param("establishmentId") Long establishmentId);

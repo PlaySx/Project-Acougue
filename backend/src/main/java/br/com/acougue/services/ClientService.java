@@ -58,57 +58,69 @@ public class ClientService {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
             
-            // Mapeamento dinâmico para os nomes de coluna específicos
-            Map<String, List<Integer>> headerMap = new HashMap<>();
+            Map<String, Integer> headerMap = new HashMap<>();
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) throw new IllegalArgumentException("A planilha está vazia ou sem cabeçalho.");
 
+            List<Integer> clientColumnIndexes = new ArrayList<>();
+            List<Integer> phoneColumnIndexes = new ArrayList<>();
+
             for (Cell cell : headerRow) {
                 String headerValue = getCellValueAsString(cell).toLowerCase().trim();
-                headerMap.computeIfAbsent(headerValue, k -> new ArrayList<>()).add(cell.getColumnIndex());
+                if (headerValue.contains("cliente")) clientColumnIndexes.add(cell.getColumnIndex());
+                else if (headerValue.contains("telefone")) phoneColumnIndexes.add(cell.getColumnIndex());
+                else if (headerValue.contains("bairro")) headerMap.put("neighborhood", cell.getColumnIndex());
+                else if (headerValue.contains("observa")) headerMap.put("observation", cell.getColumnIndex());
+                else if (headerValue.contains("endere")) headerMap.put("address_explicit", cell.getColumnIndex());
             }
 
-            // Valida se as colunas obrigatórias foram encontradas
-            if (!headerMap.containsKey("clientes") || headerMap.get("clientes").size() < 2 || !headerMap.containsKey("telefones")) {
-                throw new IllegalArgumentException("A planilha deve ter duas colunas 'Clientes' (Nome e Endereço) e uma 'Telefones'.");
+            if (clientColumnIndexes.isEmpty()) {
+                throw new IllegalArgumentException("A planilha deve ter pelo menos uma coluna para 'Cliente' (Nome).");
             }
 
-            // Define os índices com base na convenção
-            int nameIndex = headerMap.get("clientes").get(0);
-            int addressIndex = headerMap.get("clientes").get(1);
-            int phoneIndex = headerMap.get("telefones").get(0);
-            Integer neighborhoodIndex = headerMap.containsKey("bairro") ? headerMap.get("bairro").get(0) : null;
+            int nameIndex = clientColumnIndexes.get(0);
+            Integer addressIndex = headerMap.get("address_explicit") != null ? headerMap.get("address_explicit") : (clientColumnIndexes.size() > 1 ? clientColumnIndexes.get(1) : null);
+            Integer neighborhoodIndex = headerMap.get("neighborhood");
+            Integer observationIndex = headerMap.get("observation");
 
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue;
 
                 try {
                     String name = getCellValue(row, nameIndex);
-                    String address = getCellValue(row, addressIndex);
-                    String phoneRaw = getCellValue(row, phoneIndex);
-                    String neighborhood = getCellValue(row, neighborhoodIndex);
+                    if (name.isEmpty()) continue;
 
-                    if (name.isEmpty() || phoneRaw.isEmpty()) continue;
-
-                    String cleanPhone = phoneRaw.replaceAll("\\D", "");
-                    if (cleanPhone.isEmpty()) throw new IllegalArgumentException("Telefone inválido: " + phoneRaw);
-
-                    if (!clientRepository.existsByPhoneNumbersNumber(cleanPhone)) {
-                        ClientRequestDTO dto = new ClientRequestDTO();
-                        dto.setName(name);
-                        
-                        List<PhoneNumberDTO> phones = new ArrayList<>();
-                        phones.add(new PhoneNumberDTO(PhoneType.CELULAR, cleanPhone, true));
-                        dto.setPhoneNumbers(phones);
-                        
-                        dto.setAddress(address);
-                        dto.setAddressNeighborhood(neighborhood);
-                        dto.setObservation(""); // Observação não vem da planilha
-                        dto.setEstablishmentId(establishmentId);
-
-                        create(dto);
-                        successCount++;
+                    List<PhoneNumberDTO> phones = new ArrayList<>();
+                    for (Integer phoneIdx : phoneColumnIndexes) {
+                        String phoneRaw = getCellValue(row, phoneIdx);
+                        String cleanPhone = phoneRaw.replaceAll("\\D", "");
+                        if (!cleanPhone.isEmpty()) {
+                            phones.add(new PhoneNumberDTO(PhoneType.CELULAR, cleanPhone, phones.isEmpty()));
+                        }
                     }
+                    
+                    String observation = getCellValue(row, observationIndex);
+                    if (phones.isEmpty()) {
+                        observation = "[IMPORTAÇÃO]: Telefone não fornecido. " + (observation != null ? observation : "");
+                    }
+
+                    // Para evitar erro de constraint, não podemos ter um cliente com o mesmo nome e sem telefone
+                    // Vamos pular se um cliente com o mesmo nome e sem telefone já existe
+                    if (phones.isEmpty() && clientRepository.existsByNameAndPhoneNumbersIsNull(name)) {
+                        continue;
+                    }
+                    
+                    ClientRequestDTO dto = new ClientRequestDTO();
+                    dto.setName(name);
+                    dto.setPhoneNumbers(phones);
+                    dto.setAddress(getCellValue(row, addressIndex));
+                    dto.setAddressNeighborhood(getCellValue(row, neighborhoodIndex));
+                    dto.setObservation(observation.trim());
+                    dto.setEstablishmentId(establishmentId);
+
+                    Client client = clientMapper.toEntity(dto);
+                    clientRepository.save(client);
+                    successCount++;
 
                 } catch (Exception e) {
                     failCount++;
@@ -119,6 +131,7 @@ public class ClientService {
 
         result.put("success", successCount);
         result.put("failed", failCount);
+        result.put("skipped", 0);
         result.put("errors", errors);
         return result;
     }

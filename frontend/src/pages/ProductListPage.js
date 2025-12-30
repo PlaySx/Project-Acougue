@@ -16,6 +16,11 @@ import TableSkeleton from '../components/skeletons/TableSkeleton';
 const categories = ['CARNES', 'BEBIDAS', 'MERCEARIA', 'PADARIA', 'FRIOS_E_LATICINIOS', 'HORTIFRUTI', 'OUTROS'];
 const pricingTypes = ['PER_KG', 'PER_UNIT'];
 
+// Função auxiliar para formatar o número de forma inteligente
+const formatNumber = (num) => {
+  return parseFloat(num.toFixed(3));
+};
+
 export default function ProductListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,8 +38,10 @@ export default function ProductListPage() {
   const fetchProducts = useCallback(async (query) => {
     if (!user?.establishmentId) return;
     try {
+      setLoading(true);
       const params = new URLSearchParams({ establishmentId: user.establishmentId });
       if (query) params.append('name', query);
+      
       const response = await apiClient.get(`/products?${params.toString()}`);
       setProducts(response.data);
     } catch (err) {
@@ -45,16 +52,14 @@ export default function ProductListPage() {
   }, [user]);
 
   useEffect(() => {
-    setLoading(true);
     const delayDebounceFn = setTimeout(() => { fetchProducts(searchTerm); }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, fetchProducts]);
 
   const handleEditClick = (product) => {
     setEditRowId(product.id);
-    // CONVERSÃO PARA KG AO EDITAR
     const stockValueForEditing = product.pricingType === 'PER_KG' 
-      ? product.stockQuantity / 1000 
+      ? formatNumber(product.stockQuantity / 1000)
       : product.stockQuantity;
     setEditedRowData({ ...product, stockQuantity: stockValueForEditing });
   };
@@ -71,7 +76,6 @@ export default function ProductListPage() {
 
   const handleSaveClick = async (id) => {
     try {
-      // CONVERSÃO DE VOLTA PARA GRAMAS AO SALVAR
       const stockValueToSave = editedRowData.pricingType === 'PER_KG'
         ? Math.round(parseFloat(editedRowData.stockQuantity) * 1000)
         : parseInt(editedRowData.stockQuantity, 10);
@@ -124,7 +128,10 @@ export default function ProductListPage() {
                         {isEditMode ? (
                           <TextField size="small" name="stockQuantity" type="number" value={editedRowData.stockQuantity} onChange={handleInputChange} helperText={product.pricingType === 'PER_KG' ? 'em kg' : 'em unidades'} />
                         ) : (
-                          product.pricingType === 'PER_KG' ? `${(product.stockQuantity / 1000).toFixed(3)} kg` : `${product.stockQuantity} un`
+                          // LÓGICA DE EXIBIÇÃO CORRIGIDA
+                          product.pricingType === 'PER_KG'
+                            ? `${formatNumber(product.stockQuantity / 1000)} kg`
+                            : `${product.stockQuantity} un`
                         )}
                       </TableCell>
                       <TableCell>{isEditMode ? <TextField select size="small" name="category" value={editedRowData.category} onChange={handleInputChange} sx={{ minWidth: 120 }}>{categories.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</TextField> : product.category}</TableCell>

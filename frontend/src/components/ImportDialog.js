@@ -50,13 +50,17 @@ export default function ImportDialog({ open, onClose, onImport, title, templateP
           <Box>
             <Alert severity={result.failed > 0 ? 'warning' : 'success'}>
               Importação Concluída! <br />
-              - {result.success} clientes importados com sucesso. <br />
-              - {result.failed} linhas falharam.
+              - {result.success || 0} clientes importados com sucesso. <br />
+              - {result.skipped || 0} clientes ignorados (duplicados). <br />
+              - {result.failed || 0} linhas falharam.
             </Alert>
             {result.errors && result.errors.length > 0 && (
-              <List dense sx={{ maxHeight: 200, overflow: 'auto', mt: 2 }}>
-                {result.errors.map((err, i) => <ListItem key={i}><ListItemText primary={err} /></ListItem>)}
-              </List>
+              <Box>
+                <Typography sx={{ mt: 2, fontWeight: 'bold' }}>Detalhes dos Erros:</Typography>
+                <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+                  {result.errors.map((err, i) => <ListItem key={i}><ListItemText primary={err} /></ListItem>)}
+                </List>
+              </Box>
             )}
           </Box>
         ) : (
