@@ -2,12 +2,14 @@ package br.com.acougue.services;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
-import br.com.acougue.dto.PhoneNumberDTO;
 import br.com.acougue.entities.Client;
+import br.com.acougue.entities.Establishment;
+import br.com.acougue.entities.PhoneNumber;
 import br.com.acougue.enums.PhoneType;
 import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.mapper.ClientMapper;
 import br.com.acougue.repository.ClientRepository;
+import br.com.acougue.repository.EstablishmentRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,10 +30,12 @@ import java.util.Map;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final EstablishmentRepository establishmentRepository;
     private final ClientMapper clientMapper;
 
-    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper) {
+    public ClientService(ClientRepository clientRepository, EstablishmentRepository establishmentRepository, ClientMapper clientMapper) {
         this.clientRepository = clientRepository;
+        this.establishmentRepository = establishmentRepository;
         this.clientMapper = clientMapper;
     }
 
@@ -54,6 +58,9 @@ public class ClientService {
         int successCount = 0;
         int failCount = 0;
         List<String> errors = new ArrayList<>();
+
+        Establishment establishment = establishmentRepository.findById(establishmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estabelecimento não encontrado com id: " + establishmentId));
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -90,36 +97,32 @@ public class ClientService {
                     String name = getCellValue(row, nameIndex);
                     if (name.isEmpty()) continue;
 
-                    List<PhoneNumberDTO> phones = new ArrayList<>();
+                    Client newClient = new Client();
+                    newClient.setName(name);
+                    newClient.setAddress(getCellValue(row, addressIndex));
+                    newClient.setAddressNeighborhood(getCellValue(row, neighborhoodIndex));
+                    newClient.setObservation(getCellValue(row, observationIndex));
+                    newClient.setEstablishment(establishment);
+
+                    boolean hasPhone = false;
                     for (Integer phoneIdx : phoneColumnIndexes) {
                         String phoneRaw = getCellValue(row, phoneIdx);
                         String cleanPhone = phoneRaw.replaceAll("\\D", "");
                         if (!cleanPhone.isEmpty()) {
-                            phones.add(new PhoneNumberDTO(PhoneType.CELULAR, cleanPhone, phones.isEmpty()));
+                            PhoneNumber phone = new PhoneNumber();
+                            phone.setType(PhoneType.CELULAR);
+                            phone.setNumber(cleanPhone);
+                            phone.setPrimary(!hasPhone); // O primeiro encontrado é o principal
+                            newClient.addPhoneNumber(phone);
+                            hasPhone = true;
                         }
                     }
                     
-                    String observation = getCellValue(row, observationIndex);
-                    if (phones.isEmpty()) {
-                        observation = "[IMPORTAÇÃO]: Telefone não fornecido. " + (observation != null ? observation : "");
+                    if (!hasPhone) {
+                        newClient.setObservation( (newClient.getObservation() + " [IMPORTAÇÃO]: Telefone não fornecido.").trim() );
                     }
 
-                    // Para evitar erro de constraint, não podemos ter um cliente com o mesmo nome e sem telefone
-                    // Vamos pular se um cliente com o mesmo nome e sem telefone já existe
-                    if (phones.isEmpty() && clientRepository.existsByNameAndPhoneNumbersIsNull(name)) {
-                        continue;
-                    }
-                    
-                    ClientRequestDTO dto = new ClientRequestDTO();
-                    dto.setName(name);
-                    dto.setPhoneNumbers(phones);
-                    dto.setAddress(getCellValue(row, addressIndex));
-                    dto.setAddressNeighborhood(getCellValue(row, neighborhoodIndex));
-                    dto.setObservation(observation.trim());
-                    dto.setEstablishmentId(establishmentId);
-
-                    Client client = clientMapper.toEntity(dto);
-                    clientRepository.save(client);
+                    clientRepository.save(newClient);
                     successCount++;
 
                 } catch (Exception e) {
@@ -131,7 +134,6 @@ public class ClientService {
 
         result.put("success", successCount);
         result.put("failed", failCount);
-        result.put("skipped", 0);
         result.put("errors", errors);
         return result;
     }
