@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import apiClient from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import {
   Box, Container, Typography, Alert, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, CircularProgress,
+  TableContainer, TableHead, TableRow, Paper, Link,
   TextField, Grid, Accordion, AccordionSummary, AccordionDetails, Button,
   IconButton, Snackbar
 } from '@mui/material';
@@ -78,7 +78,6 @@ export default function ClientListPage() {
       name: client.name,
       address: client.address,
       addressNeighborhood: client.addressNeighborhood,
-      // Simplificação: só permite editar o primeiro telefone (principal)
       primaryPhoneNumber: client.phoneNumbers?.[0]?.number || ''
     });
   };
@@ -100,12 +99,8 @@ export default function ClientListPage() {
         name: editedRowData.name,
         address: editedRowData.address,
         addressNeighborhood: editedRowData.addressNeighborhood,
-        observation: client.observation, // Mantém observação original
-        phoneNumbers: [{
-          ...originalPhone,
-          number: editedRowData.primaryPhoneNumber,
-          isPrimary: true
-        }],
+        observation: client.observation,
+        phoneNumbers: [{ ...originalPhone, number: editedRowData.primaryPhoneNumber, isPrimary: true }],
         establishmentId: user.establishmentId
       };
       
@@ -157,8 +152,12 @@ export default function ClientListPage() {
                   const isEditMode = editRowId === client.id;
                   const primaryPhone = client.phoneNumbers?.find(p => p.isPrimary) || client.phoneNumbers?.[0];
                   return (
-                    <TableRow key={client.id}>
-                      <TableCell>{isEditMode ? <TextField size="small" name="name" value={editedRowData.name} onChange={handleInputChange} /> : client.name}</TableCell>
+                    <TableRow key={client.id} hover>
+                      <TableCell>
+                        <Link component={RouterLink} to={`/clientes/${client.id}`} sx={{ fontWeight: 'bold' }}>
+                          {isEditMode ? editedRowData.name : client.name}
+                        </Link>
+                      </TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="primaryPhoneNumber" value={editedRowData.primaryPhoneNumber} onChange={handleInputChange} /> : primaryPhone?.number}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="address" value={editedRowData.address} onChange={handleInputChange} /> : client.address}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="addressNeighborhood" value={editedRowData.addressNeighborhood} onChange={handleInputChange} /> : client.addressNeighborhood}</TableCell>

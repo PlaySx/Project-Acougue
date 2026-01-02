@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom'; // 1. Importa o useLocation
 import apiClient from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import {
   Box, Button, Container, Typography, Alert, Autocomplete, TextField,
-  List, ListItem, ListItemText, IconButton, Divider, createFilterOptions
+  List, ListItem, ListItemText, IconButton, Divider
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ClientQuickAddDialog from '../components/ClientQuickAddDialog';
 import QuantityDialog from '../components/QuantityDialog';
 
-const filter = createFilterOptions();
-
 export default function OrderCreatePage() {
   const { user } = useAuth();
-  const [selectedClient, setSelectedClient] = useState(null);
+  const location = useLocation(); // 2. Usa o hook para acessar o state da navegação
+
+  // 3. Verifica se um cliente foi pré-selecionado e o usa como estado inicial
+  const [selectedClient, setSelectedClient] = useState(location.state?.preSelectedClient || null);
+  
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('Dinheiro');
   const [observation, setObservation] = useState('');
@@ -26,7 +29,6 @@ export default function OrderCreatePage() {
   const [productForDialog, setProductForDialog] = useState(null);
   
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
-  const [clientInitialName, setClientInitialName] = useState('');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -109,7 +111,7 @@ export default function OrderCreatePage() {
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Autocomplete
-              sx={{ flexGrow: 1 }} // Faz o Autocomplete ocupar todo o espaço disponível
+              sx={{ flexGrow: 1 }}
               value={selectedClient}
               onChange={(event, newValue) => {
                 setSelectedClient(newValue);

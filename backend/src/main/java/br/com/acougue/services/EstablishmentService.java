@@ -39,6 +39,8 @@ public class EstablishmentService {
         Establishment updatedEstablishment = establishmentRepository.save(existingEstablishment);
 
         String newDetails = "Nome: " + updatedEstablishment.getName() + ", Endereço: " + updatedEstablishment.getAddress();
+        
+        // CORREÇÃO: O último parâmetro é o ID do estabelecimento, que é o próprio 'id' neste caso.
         auditService.logAction("UPDATE", "Establishment", id.toString(), "De: [" + oldDetails + "] Para: [" + newDetails + "]", id);
 
         return updatedEstablishment;

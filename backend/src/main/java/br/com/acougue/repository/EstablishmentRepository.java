@@ -1,21 +1,11 @@
-package br.com.acougue.repository; // seu pacote atual
+package br.com.acougue.repository;
 
+import br.com.acougue.entities.Establishment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional; // import necessário para o Optional
-
-import br.com.acougue.entities.Establishment;
-
 @Repository
 public interface EstablishmentRepository extends JpaRepository<Establishment, Long> {
-	
-    Optional<Establishment> findByUsername(String username);
-
-    boolean existsByUsername(String username);
-
-    boolean existsByCnpj(Long cnpj); // Adicionado para a validação
-
-    List<Establishment> findByUsers_Id(Long userId);
+    // Novo método para verificar se um CNPJ já existe
+    boolean existsByCnpj(String cnpj);
 }

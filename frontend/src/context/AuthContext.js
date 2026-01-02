@@ -10,14 +10,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const setupUserFromToken = (token) => {
-    const decodedToken = jwtDecode(token);
-    setUser({ 
-      email: decodedToken.sub, 
-      role: decodedToken.role,
-      establishmentId: decodedToken.establishmentId,
-      establishmentName: decodedToken.establishmentName // Adicionado
-    });
-    setIsAuthenticated(true);
+    try {
+      const decodedToken = jwtDecode(token);
+      setUser({ 
+        email: decodedToken.sub, 
+        role: decodedToken.role,
+        establishmentId: decodedToken.establishmentId,
+        establishmentName: decodedToken.establishmentName
+      });
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("Token inválido:", error);
+      logout();
+    }
   };
 
   useEffect(() => {
@@ -28,23 +33,30 @@ export function AuthProvider({ children }) {
         if (decodedToken.exp * 1000 > Date.now()) {
           setupUserFromToken(token);
         } else {
-          localStorage.removeItem('authToken');
+          logout();
         }
       } catch (error) {
-        console.error("Erro ao decodificar o token:", error);
-        localStorage.removeItem('authToken');
+        logout();
       }
     }
     setLoading(false);
   }, []);
 
-  const login = async (loginData) => {
+  // Atualizado para aceitar um token opcional
+  const login = async (loginData, token = null) => {
     try {
-      const response = await apiClient.post('/auth/login', loginData);
-      if (response.data && response.data.token) {
-        const { token } = response.data;
+      if (token) {
+        // Caso de registro ou login social: token já fornecido
         localStorage.setItem('authToken', token);
         setupUserFromToken(token);
+      } else {
+        // Caso de login normal: busca o token
+        const response = await apiClient.post('/auth/login', loginData);
+        if (response.data && response.data.token) {
+          const newToken = response.data.token;
+          localStorage.setItem('authToken', newToken);
+          setupUserFromToken(newToken);
+        }
       }
     } catch (error) {
       logout();

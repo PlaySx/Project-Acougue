@@ -3,14 +3,14 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import darkBlueTheme from './theme/darkBlueTheme'; // Importa o nosso novo tema
+import darkBlueTheme from './theme/darkBlueTheme';
 import CssBaseline from '@mui/material/CssBaseline';
 
 function App() {
   return (
-    // O ThemeProvider agora usa o nosso tema customizado
+    // Removido o GoogleOAuthProvider
     <ThemeProvider theme={darkBlueTheme}>
-      <CssBaseline /> {/* Garante que o fundo e as cores base sejam aplicados */}
+      <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <AuthProvider>
           <AppRoutes />

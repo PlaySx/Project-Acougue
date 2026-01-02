@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 import Box from '@mui/material/Box';
@@ -17,9 +17,10 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
+import { Alert } from '@mui/material';
 
 import ForgotPassword from '../components/ForgotPassword';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../components/CustomIcons';
+import { SitemarkIcon } from '../components/CustomIcons'; // Removido GoogleIcon e FacebookIcon
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -35,22 +36,24 @@ const Card = styled(MuiCard)(({ theme }) => ({
   boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
 }));
 
-// CORREÇÃO SENIOR: Ajuste para permitir rolagem
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  minHeight: '100dvh', // Garante altura mínima, mas permite crescer
-  padding: theme.spacing(4, 2), // Adiciona espaçamento vertical e horizontal
+  minHeight: '100dvh',
+  padding: theme.spacing(4, 2),
   width: '100%',
-  justifyContent: 'center', // Centraliza verticalmente se houver espaço
+  justifyContent: 'center',
 }));
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  
+  const successMessage = location.state?.successMessage;
 
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -89,11 +92,8 @@ export default function LoginPage() {
           Sign in
         </Typography>
         
-        {error && (
-          <Typography color="error" align="center" sx={{ mt: 1 }}>
-            {error}
-          </Typography>
-        )}
+        {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
+        {successMessage && <Alert severity="success" sx={{ mt: 1 }}>{successMessage}</Alert>}
 
         <Box
           component="form"
@@ -170,23 +170,7 @@ export default function LoginPage() {
           </Grid>
 
         </Box>
-        <Divider>or</Divider>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-          >
-            Sign in with Google
-          </Button>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<FacebookIcon />}
-          >
-            Sign in with Facebook
-          </Button>
-        </Box>
+        {/* Seção de login social removida */}
       </Card>
       <ForgotPassword open={open} handleClose={handleClose} />
     </SignInContainer>

@@ -6,11 +6,12 @@ import SignUp from '../pages/SignUp';
 import NotFoundPage from '../pages/NotFoundPage';
 import ClientCreatePage from '../pages/ClientCreatePage';
 import ClientListPage from '../pages/ClientListPage';
+import ClientDetailPage from '../pages/ClientDetailPage'; // Importa a nova página
 import ProductCreatePage from '../pages/ProductCreatePage';
 import OrderCreatePage from '../pages/OrderCreatePage';
 import OrderListPage from '../pages/OrderListPage';
 import AuditPage from '../pages/AuditPage';
-import SettingsPage from '../pages/SettingsPage'; // Importa a nova página
+import SettingsPage from '../pages/SettingsPage';
 
 import AppLayout from '../components/layout/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -24,12 +25,13 @@ export default function AppRoutes() {
       
       { path: 'clientes', element: (<ProtectedRoute><AppLayout><ClientListPage /></AppLayout></ProtectedRoute>) },
       { path: 'clientes/novo', element: (<ProtectedRoute><AppLayout><ClientCreatePage /></AppLayout></ProtectedRoute>) },
-      
+      { path: 'clientes/:id', element: (<ProtectedRoute><AppLayout><ClientDetailPage /></AppLayout></ProtectedRoute>) }, // Nova rota
+
       { path: 'pedidos', element: (<ProtectedRoute><AppLayout><OrderListPage /></AppLayout></ProtectedRoute>) },
       { path: 'pedidos/novo', element: (<ProtectedRoute><AppLayout><OrderCreatePage /></AppLayout></ProtectedRoute>) },
       
       { path: 'auditoria', element: (<ProtectedRoute><AppLayout><AuditPage /></AppLayout></ProtectedRoute>) },
-      { path: 'configuracoes', element: (<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>) }, // Nova rota
+      { path: 'configuracoes', element: (<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>) },
 
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <SignUp /> },

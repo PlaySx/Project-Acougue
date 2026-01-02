@@ -2,9 +2,10 @@ package br.com.acougue.controller;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
+import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.services.ClientService;
+import br.com.acougue.services.OrderService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,11 @@ import java.util.Map;
 public class ClientController {
 
 	private final ClientService clientService;
+    private final OrderService orderService; // Injetando OrderService
 
-	public ClientController(ClientService clientService) {
+	public ClientController(ClientService clientService, OrderService orderService) {
 		this.clientService = clientService;
+        this.orderService = orderService;
 	}
 
 	@PostMapping
@@ -73,6 +76,13 @@ public class ClientController {
 		ClientResponseDTO client = clientService.findById(id);
 		return ResponseEntity.ok(client);
 	}
+
+    // NOVO ENDPOINT: Histórico de Pedidos do Cliente
+    @GetMapping("/{id}/orders")
+    public ResponseEntity<List<OrderResponseDTO>> getClientOrders(@PathVariable Long id) {
+        List<OrderResponseDTO> orders = orderService.findByClientId(id);
+        return ResponseEntity.ok(orders);
+    }
 
 	@PutMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> update(

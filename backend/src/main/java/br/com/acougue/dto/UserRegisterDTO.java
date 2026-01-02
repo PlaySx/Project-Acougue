@@ -19,7 +19,10 @@ public class UserRegisterDTO {
 
     // Campos opcionais para o cadastro de um proprietário com seu estabelecimento
     private String establishmentName;
-    private Long cnpj;
+    
+    // CORREÇÃO: CNPJ deve ser String
+    private String cnpj;
+    
     private String establishmentAddress;
 
     // Campo para associar um funcionário a um estabelecimento existente
@@ -38,8 +41,8 @@ public class UserRegisterDTO {
     public String getEstablishmentName() { return establishmentName; }
     public void setEstablishmentName(String establishmentName) { this.establishmentName = establishmentName; }
 
-    public Long getCnpj() { return cnpj; }
-    public void setCnpj(Long cnpj) { this.cnpj = cnpj; }
+    public String getCnpj() { return cnpj; }
+    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
 
     public String getEstablishmentAddress() { return establishmentAddress; }
     public void setEstablishmentAddress(String establishmentAddress) { this.establishmentAddress = establishmentAddress; }
