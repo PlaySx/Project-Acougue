@@ -5,14 +5,17 @@ import { useAuth } from '../context/AuthContext';
 import {
   Box, Container, Typography, Alert, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper,
-  TextField, Grid, MenuItem, Snackbar, Button, IconButton
+  TextField, Grid, MenuItem, Snackbar, Button, IconButton, Tooltip
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
-import CancelIcon from '@mui/icons-material/Cancel'; // Ícone para cancelar
+import CancelIcon from '@mui/icons-material/Cancel';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ReplayIcon from '@mui/icons-material/Replay'; // Ícone para repetir
 import TableSkeleton from '../components/skeletons/TableSkeleton';
+import OrderDetailDialog from '../components/OrderDetailDialog';
 
 const orderStatusOptions = [
   'PENDENTE', 'CONFIRMADO', 'EM_PREPARO', 'PRONTO', 'A_CAMINHO', 'ENTREGUE', 'CANCELADO'
@@ -26,11 +29,10 @@ export default function OrderListPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [filters, setFilters] = useState({
-    clientName: '',
-    status: '',
-    date: null,
-  });
+  const [filters, setFilters] = useState({ clientName: '', status: '', date: null });
+  
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     if (!user?.establishmentId) return;
@@ -50,22 +52,16 @@ export default function OrderListPage() {
     }
   }, [user, filters]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const response = await apiClient.put(`/orders/${orderId}/status`, newStatus, {
-        headers: { 'Content-Type': 'text/plain' }
-      });
+      const response = await apiClient.put(`/orders/${orderId}/status`, newStatus, { headers: { 'Content-Type': 'text/plain' } });
       if (response.status === 200) {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
         setSuccess(`Status do pedido #${orderId} atualizado!`);
       }
-    } catch (err) {
-      setError('Falha ao atualizar o status.');
-    }
+    } catch (err) { setError('Falha ao atualizar o status.'); }
   };
 
   const handleCancelOrder = (orderId) => {
@@ -76,9 +72,7 @@ export default function OrderListPage() {
 
   const handleExport = async () => {
     try {
-      const response = await apiClient.get(`/orders/export/excel?establishmentId=${user.establishmentId}`, {
-        responseType: 'blob',
-      });
+      const response = await apiClient.get(`/orders/export/excel?establishmentId=${user.establishmentId}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -86,9 +80,17 @@ export default function OrderListPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err) {
-      setError('Falha ao exportar os dados.');
-    }
+    } catch (err) { setError('Falha ao exportar os dados.'); }
+  };
+
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setDetailDialogOpen(true);
+  };
+
+  // Nova função para repetir pedido
+  const handleRepeatOrder = (order) => {
+    navigate('/pedidos/novo', { state: { repeatOrder: order } });
   };
 
   const tableColumns = ['ID', 'Cliente', 'Data', 'Status', 'Valor Total', 'Ações'];
@@ -130,10 +132,22 @@ export default function OrderListPage() {
                     <TableCell><TextField select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)} size="small" sx={{ minWidth: 150 }} disabled={order.status === 'CANCELADO' || order.status === 'ENTREGUE'}>{orderStatusOptions.map(option => <MenuItem key={option} value={option}>{option}</MenuItem>)}</TextField></TableCell>
                     <TableCell align="right">R$ {order.totalValue.toFixed(2)}</TableCell>
                     <TableCell>
-                      {order.status !== 'CANCELADO' && order.status !== 'ENTREGUE' && (
-                        <IconButton onClick={() => handleCancelOrder(order.id)} color="error" title="Cancelar Pedido">
-                          <CancelIcon />
+                      <Tooltip title="Ver Detalhes">
+                        <IconButton onClick={() => handleViewDetails(order)} color="primary">
+                          <VisibilityIcon />
                         </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Repetir Pedido">
+                        <IconButton onClick={() => handleRepeatOrder(order)} color="secondary">
+                          <ReplayIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {order.status !== 'CANCELADO' && order.status !== 'ENTREGUE' && (
+                        <Tooltip title="Cancelar Pedido">
+                          <IconButton onClick={() => handleCancelOrder(order.id)} color="error">
+                            <CancelIcon />
+                          </IconButton>
+                        </Tooltip>
                       )}
                     </TableCell>
                   </TableRow>
@@ -143,6 +157,7 @@ export default function OrderListPage() {
           </TableContainer>
         )}
       </Box>
+      <OrderDetailDialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} order={selectedOrder} />
     </Container>
   );
 }

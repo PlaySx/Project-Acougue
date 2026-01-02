@@ -4,6 +4,7 @@ import br.com.acougue.dto.DashboardDataDTO;
 import br.com.acougue.services.DashboardService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // 1. Importa
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +23,8 @@ public class DashboardController {
     }
 
     @GetMapping
+    // 2. Aplica a proteção: Só permite se o usuário tiver acesso ao establishmentId solicitado
+    @PreAuthorize("@securityService.hasAccessToEstablishment(#establishmentId)")
     public ResponseEntity<DashboardDataDTO> getDashboardData(
             @RequestParam Long establishmentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,

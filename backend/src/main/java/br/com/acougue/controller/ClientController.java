@@ -26,7 +26,7 @@ import java.util.Map;
 public class ClientController {
 
 	private final ClientService clientService;
-    private final OrderService orderService; // Injetando OrderService
+    private final OrderService orderService;
 
 	public ClientController(ClientService clientService, OrderService orderService) {
 		this.clientService = clientService;
@@ -34,6 +34,7 @@ public class ClientController {
 	}
 
 	@PostMapping
+    @PreAuthorize("@securityService.hasAccessToEstablishment(#clientRequestDTO.establishmentId)")
 	public ResponseEntity<ClientResponseDTO> create(@Valid @RequestBody ClientRequestDTO clientRequestDTO) {
 		ClientResponseDTO created = clientService.create(clientRequestDTO);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -42,7 +43,7 @@ public class ClientController {
 	}
 
 	@PostMapping("/import")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("@securityService.hasAccessToEstablishment(#establishmentId)")
     public ResponseEntity<Map<String, Object>> importClients(
             @RequestParam("file") MultipartFile file,
             @RequestParam("establishmentId") Long establishmentId) {
@@ -58,6 +59,7 @@ public class ClientController {
     }
 
 	@GetMapping("/advanced-search")
+    @PreAuthorize("@securityService.hasAccessToEstablishment(#establishmentId)")
 	public ResponseEntity<List<ClientResponseDTO>> advancedSearch(
 			@RequestParam @NotNull Long establishmentId,
 			@RequestParam(required = false) String name,
@@ -72,19 +74,21 @@ public class ClientController {
 	}
 
 	@GetMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessClient(#id)")
 	public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
 		ClientResponseDTO client = clientService.findById(id);
 		return ResponseEntity.ok(client);
 	}
 
-    // NOVO ENDPOINT: Histórico de Pedidos do Cliente
     @GetMapping("/{id}/orders")
+    @PreAuthorize("@securityService.canAccessClient(#id)")
     public ResponseEntity<List<OrderResponseDTO>> getClientOrders(@PathVariable Long id) {
         List<OrderResponseDTO> orders = orderService.findByClientId(id);
         return ResponseEntity.ok(orders);
     }
 
 	@PutMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessClient(#id) and @securityService.hasAccessToEstablishment(#requestDTO.establishmentId)")
     public ResponseEntity<ClientResponseDTO> update(
             @PathVariable Long id, 
             @Valid @RequestBody ClientRequestDTO requestDTO) {
@@ -93,6 +97,7 @@ public class ClientController {
     }
 
 	@DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessClient(#id)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         clientService.delete(id);
         return ResponseEntity.noContent().build();

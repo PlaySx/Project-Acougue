@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom'; // 1. Importa o useLocation
+import { useLocation } from 'react-router-dom';
 import apiClient from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -13,11 +13,9 @@ import QuantityDialog from '../components/QuantityDialog';
 
 export default function OrderCreatePage() {
   const { user } = useAuth();
-  const location = useLocation(); // 2. Usa o hook para acessar o state da navegação
-
-  // 3. Verifica se um cliente foi pré-selecionado e o usa como estado inicial
-  const [selectedClient, setSelectedClient] = useState(location.state?.preSelectedClient || null);
+  const location = useLocation();
   
+  const [selectedClient, setSelectedClient] = useState(location.state?.preSelectedClient || null);
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('Dinheiro');
   const [observation, setObservation] = useState('');
@@ -33,16 +31,6 @@ export default function OrderCreatePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const fetchClients = useCallback(async () => {
-    if (!user?.establishmentId) return;
-    try {
-      const response = await apiClient.get(`/clients/advanced-search?establishmentId=${user.establishmentId}`);
-      setClients(response.data);
-    } catch (err) {
-      setError('Falha ao carregar clientes.');
-    }
-  }, [user]);
-
   useEffect(() => {
     if (!user?.establishmentId) return;
     const fetchData = async () => {
@@ -51,12 +39,67 @@ export default function OrderCreatePage() {
           apiClient.get(`/clients/advanced-search?establishmentId=${user.establishmentId}`),
           apiClient.get(`/products?establishmentId=${user.establishmentId}`)
         ]);
-        setClients(clientsRes.data);
+        
+        let loadedClients = clientsRes.data;
+        setClients(loadedClients);
         setProducts(productsRes.data);
+
+        // LÓGICA DE REPETIR PEDIDO / PRÉ-SELEÇÃO
+        const { preSelectedClient, repeatOrder } = location.state || {};
+        
+        if (preSelectedClient) {
+          setSelectedClient(preSelectedClient);
+        } else if (repeatOrder) {
+          // 1. Tenta encontrar o cliente na lista carregada
+          let clientToSelect = loadedClients.find(c => c.id === repeatOrder.clientId);
+
+          // 2. Se não encontrar (ex: lista incompleta), cria o objeto com os dados do pedido
+          if (!clientToSelect && repeatOrder.clientId) {
+             clientToSelect = {
+                 id: repeatOrder.clientId,
+                 name: repeatOrder.clientName || "Cliente não identificado"
+             };
+             // Adiciona à lista para o Autocomplete reconhecer
+             setClients(prev => [...prev, clientToSelect]);
+          }
+
+          // 3. Define o cliente selecionado
+          if (clientToSelect) {
+            setSelectedClient(clientToSelect);
+          }
+
+          // Reconstrói os itens do pedido
+          const newItems = [];
+          let repeatError = '';
+          for (const oldItem of repeatOrder.items) {
+            const currentProduct = productsRes.data.find(p => p.id === oldItem.productId);
+            if (currentProduct) {
+              const quantity = oldItem.quantity || oldItem.weightInGrams;
+              if (currentProduct.stockQuantity >= quantity) {
+                const price = (currentProduct.unitPrice * (oldItem.weightInGrams ? oldItem.weightInGrams / 1000 : oldItem.quantity));
+                newItems.push({
+                  productId: currentProduct.id,
+                  name: currentProduct.name,
+                  weightInGrams: oldItem.weightInGrams,
+                  quantity: oldItem.quantity,
+                  price: parseFloat(price.toFixed(2))
+                });
+              } else {
+                repeatError += `Estoque insuficiente para ${currentProduct.name}. `;
+              }
+            } else {
+              repeatError += `Produto "${oldItem.productName}" não encontrado. `;
+            }
+          }
+          setOrderItems(newItems);
+          if (repeatError) {
+            setError(repeatError.trim());
+          }
+        }
       } catch (err) { setError('Falha ao carregar dados.'); }
     };
     fetchData();
-  }, [user]);
+  }, [user, location.state]);
 
   const handleAddProduct = (product) => {
     if (product) {
@@ -118,6 +161,12 @@ export default function OrderCreatePage() {
               }}
               options={clients}
               getOptionLabel={(option) => option.name || ""}
+              filterOptions={(options, { inputValue }) => {
+                const lowercasedInputValue = inputValue.toLowerCase();
+                return options.filter(option => 
+                  option.name.toLowerCase().includes(lowercasedInputValue)
+                );
+              }}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => <TextField {...params} label="Buscar Cliente" required />}
             />
@@ -127,7 +176,7 @@ export default function OrderCreatePage() {
               onClick={() => setClientDialogOpen(true)}
               title="Cadastrar Novo Cliente"
             >
-              <PersonAddIcon />
+              <PersonAddIcon sx={{ fontSize: '1.75rem' }} />
             </Button>
           </Box>
           
