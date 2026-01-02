@@ -102,21 +102,4 @@ A aplicação abrirá em `http://localhost:3000`.
 ### 3. Acesso Inicial
 Crie uma conta na tela de registro selecionando a opção **"Sou Proprietário"**. O sistema criará automaticamente seu estabelecimento e seu usuário administrativo.
 
----
-
-## 📸 Screenshots
-
-*(Espaço reservado para adicionar prints das telas: Dashboard, PDV, Detalhes do Cliente)*
-
----
-
-## 🔮 Melhorias Futuras
-
-- [ ] Implementação de Webhooks para notificações de venda.
-- [ ] Integração com impressoras térmicas para comprovantes.
-- [ ] Migração para PostgreSQL em produção (Docker Compose).
-- [ ] Testes unitários e de integração (JUnit/Mockito).
-
----
-
-Desenvolvido com 💻 e ☕ por **[Seu Nome]**.
+Desenvolvido com 💻 e ☕ por **Gabriel Lopes Lima**.
