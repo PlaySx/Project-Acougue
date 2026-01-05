@@ -81,6 +81,9 @@ O projeto foi desenvolvido com uma arquitetura robusta e segura, utilizando as m
 - **ApexCharts:** Para a criação dos gráficos do dashboard.
 - **Context API:** Para gerenciamento de estado global (autenticação).
 
+### DevOps
+- **Docker & Docker Compose:** Para containerização e orquestração da aplicação.
+
 ---
 
 ## 🛡️ Destaques de Arquitetura e Segurança
@@ -100,27 +103,29 @@ Esta seção detalha as decisões de engenharia tomadas para garantir que o sist
 ## ⚙️ Como Executar Localmente
 
 **Pré-requisitos:**
-- Java 17+
-- Maven 3.8+
-- Node.js 18+
+- [Git](https://git-scm.com/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+Com o Docker Desktop instalado e em execução, siga os passos:
 
 ```bash
 # 1. Clone o repositório
 git clone https://github.com/PlaySx/Project-Acougue.git
+
+# 2. Navegue para a pasta do projeto
 cd Project-Acougue
 
-# 2. Execute o Backend
-cd backend
-mvn spring-boot:run
-
-# 3. Em um novo terminal, execute o Frontend
-cd ../frontend
-npm install
-npm start
+# 3. Suba a aplicação com Docker Compose
+# (Isso irá construir as imagens e iniciar os containers)
+docker compose up --build
 ```
 
-- A API estará disponível em `http://localhost:8080`
-- A aplicação React estará disponível em `http://localhost:3000` (ou outra porta, se a 3000 estiver em uso).
+Após a conclusão do build (pode levar alguns minutos na primeira vez), o sistema estará disponível:
+
+- **Frontend:** Acesse [http://localhost:3000](http://localhost:3000)
+- **Backend API:** Disponível em `http://localhost:8080`
+
+Para parar a aplicação, pressione `Ctrl+C` no terminal onde o comando está rodando, ou utilize a interface do Docker Desktop.
 
 ---
 

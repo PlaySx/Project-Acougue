@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Serviço do Backend (Spring Boot)
+  backend:
+    build: ./backend
+    container_name: nexo-vendas-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Define a chave secreta para o JWT dentro do container
+      - JWT_SECRET=uma-chave-secreta-muito-segura-para-docker
+    networks:
+      - nexo-vendas-network
+
+  # Serviço do Frontend (React + Nginx)
+  frontend:
+    build: ./frontend
+    container_name: nexo-vendas-frontend
+    ports:
+      # Mapeia a porta 3000 do seu computador para a porta 80 do Nginx no container
+      - "3000:80"
+    depends_on:
+      - backend # Garante que o backend comece a subir antes do frontend
+    networks:
+      - nexo-vendas-network
+
+# Rede interna para os containers se comunicarem
+networks:
+  nexo-vendas-network:
+    driver: bridge

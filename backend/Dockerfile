@@ -1,33 +1,37 @@
-# ================= STAGE 1: Build =================
-# Usa uma imagem base com Maven e JDK 17 para compilar o projeto.
-# "builder" é um nome que damos para esta etapa.
-FROM maven:3.8.5-openjdk-17 AS builder
+# ----------------------------------------------------------------
+# Dockerfile para o Backend (Spring Boot)
+# ----------------------------------------------------------------
 
-# Define o diretório de trabalho dentro do container
+# Etapa 1: Construção (Build Stage)
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
 WORKDIR /app
 
-# Copia primeiro o pom.xml para aproveitar o cache de camadas do Docker.
-# Se as dependências não mudarem, o Docker não vai baixá-las de novo.
+# Copia o pom.xml
 COPY pom.xml .
+
+# Baixa dependências
 RUN mvn dependency:go-offline
 
-# Copia o resto do código-fonte da sua aplicação
+# Copia o código
 COPY src ./src
 
-# Compila a aplicação e gera o arquivo .jar, pulando os testes.
-RUN mvn package -DskipTests
+# Compila e gera o JAR (pulando testes)
+RUN mvn clean package -Dmaven.test.skip=true
 
-# ================= STAGE 2: Run =================
-# Usa uma imagem base leve, apenas com o Java Runtime (JRE), para rodar a aplicação.
-FROM eclipse-temurin:17-jre-jammy
+# ---
+
+# Etapa 2: Execução (Run Stage)
+FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Copia o arquivo .jar gerado na etapa de build para a imagem final.
-COPY --from=builder /app/target/*.jar app.jar
+# Copia o JAR da etapa de build
+COPY --from=build /app/target/*.jar app.jar
 
-# Expõe a porta 8080, que é a porta padrão do Spring Boot.
+# Expõe a porta
 EXPOSE 8080
 
-# Comando para iniciar a aplicação quando o container for executado.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Comando de inicialização
+# CORREÇÃO: Ativando o perfil 'production' do Spring
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=production"]

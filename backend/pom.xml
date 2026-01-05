@@ -100,5 +100,12 @@
             <filtering>false</filtering>
         </resource>
     </resources>
+    <!-- CORREÇÃO: Adicionando o plugin do Spring Boot para gerar o JAR executável -->
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
 </build>
 </project>
