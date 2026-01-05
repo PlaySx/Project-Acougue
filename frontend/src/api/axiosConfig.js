@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Cria uma instância do axios que será usada em toda a aplicação
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080', // URL base da sua API
+  // CORREÇÃO: Usa a variável de ambiente se existir, senão usa localhost
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
 });
 
 // Interceptor de Requisição: Adiciona o token a cada chamada
