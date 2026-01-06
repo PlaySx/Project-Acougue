@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_client")
+@Table(name = "tb_clients") // PADRONIZAÇÃO: tb_ + plural
 public class Client {
 
 	@Id
@@ -21,9 +21,6 @@ public class Client {
 	@Column(name = "client_name")
 	private String name;
 
-    // Campo antigo removido: private Long numberPhone;
-
-    // Nova relação OneToMany
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PhoneNumber> phoneNumbers = new ArrayList<>();
 
@@ -41,7 +38,9 @@ public class Client {
     private LocalDateTime createdAt;
 
 	@ManyToMany
-	@JoinTable(name = "client_products", joinColumns = @JoinColumn(name = "client_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
+	@JoinTable(name = "tb_client_products", // PADRONIZAÇÃO: Tabela de junção também com tb_
+            joinColumns = @JoinColumn(name = "client_id"), 
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore
 	private List<Product> products;
 
@@ -56,7 +55,6 @@ public class Client {
 
 	public Client() {}
 
-    // Método utilitário para adicionar telefone
     public void addPhoneNumber(PhoneNumber phoneNumber) {
         phoneNumbers.add(phoneNumber);
         phoneNumber.setClient(this);
@@ -67,10 +65,8 @@ public class Client {
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
     public List<PhoneNumber> getPhoneNumbers() { return phoneNumbers; }
     public void setPhoneNumbers(List<PhoneNumber> phoneNumbers) { this.phoneNumbers = phoneNumbers; }
-
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     public String getAddressNeighborhood() { return addressNeighborhood; }

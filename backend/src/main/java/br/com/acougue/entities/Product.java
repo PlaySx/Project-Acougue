@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_products")
+@Table(name = "tb_products") // Já estava correto, mantendo o padrão
 public class Product {
 
 	@Id
@@ -33,7 +33,7 @@ public class Product {
 	private BigDecimal unitPrice;
 
 	@Column(name = "stock_quantity", nullable = false)
-	private Integer stockQuantity = 0; // Em gramas para PER_KG, em unidades para PER_UNIT
+	private Integer stockQuantity = 0;
 	
 	@ManyToOne
 	@JoinColumn(name = "establishment_id")

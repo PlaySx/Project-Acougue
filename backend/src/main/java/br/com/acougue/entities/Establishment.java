@@ -2,11 +2,12 @@ package br.com.acougue.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_establishment")
+@Table(name = "tb_establishments") // PADRONIZAÇÃO: tb_ + plural
 public class Establishment {
 
     @Id
@@ -17,29 +18,26 @@ public class Establishment {
     private String name;
 
     @Column(nullable = false, unique = true)
-    private String cnpj; // CORREÇÃO: Alterado de Long para String
+    private String cnpj;
 
+    @Column(nullable = false)
     private String address;
 
-    // Campos para login do estabelecimento (opcional, dependendo da regra de negócio)
-    private String username;
-    private String password;
-
-    @OneToMany(mappedBy = "establishment")
+    @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<User> users;
+    private List<User> users = new ArrayList<>();
 
-    @OneToMany(mappedBy = "establishment")
+    @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Client> clients;
+    private List<Client> clients = new ArrayList<>();
 
-    @OneToMany(mappedBy = "establishment")
+    @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Product> products;
+    private List<Product> products = new ArrayList<>();
 
-    @OneToMany(mappedBy = "establishment")
+    @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Order> orders;
+    private List<Order> orders = new ArrayList<>();
 
     public Establishment() {}
 
@@ -53,31 +51,18 @@ public class Establishment {
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-
-    public String getCnpj() { return cnpj; } // Getter retorna String
-    public void setCnpj(String cnpj) { this.cnpj = cnpj; } // Setter aceita String
-
+    public String getCnpj() { return cnpj; }
+    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
     public List<User> getUsers() { return users; }
     public void setUsers(List<User> users) { this.users = users; }
-
     public List<Client> getClients() { return clients; }
     public void setClients(List<Client> clients) { this.clients = clients; }
-
     public List<Product> getProducts() { return products; }
     public void setProducts(List<Product> products) { this.products = products; }
-
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
 

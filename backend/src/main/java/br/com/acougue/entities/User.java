@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "users")
+@Table(name = "tb_users") // CORREÇÃO: Mudando para tb_users para evitar conflito com palavra reservada
 public class User implements UserDetails {
 
     @Serial
@@ -23,7 +23,7 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email; // Renamed from username
+    private String email;
 
     @Column(nullable = false)
     private String password;
@@ -36,7 +36,6 @@ public class User implements UserDetails {
     @JoinColumn(name = "establishment_id")
     private Establishment establishment;
 
-    // Construtores
     public User() {}
 
     public User(String email, String password, Role role) {
@@ -53,7 +52,6 @@ public class User implements UserDetails {
         this.establishment = establishment;
     }
 
-    // Getters e Setters
     public Long getId() { 
         return id; 
     }
@@ -90,7 +88,6 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    // Implementação UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
@@ -103,7 +100,7 @@ public class User implements UserDetails {
     
     @Override
     public String getUsername() { 
-        return this.email; // Spring Security usa este método, que agora retorna o email
+        return this.email;
     }
     
     @Override
