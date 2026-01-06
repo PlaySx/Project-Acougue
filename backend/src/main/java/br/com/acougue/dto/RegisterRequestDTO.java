@@ -20,6 +20,7 @@ public class RegisterRequestDTO {
     // Campos para ROLE_OWNER
     private String establishmentName;
     private String establishmentCnpj;
+    private String establishmentAddress; // Novo campo
 
     // Campo para ROLE_EMPLOYEE
     private Long establishmentId;
@@ -35,6 +36,8 @@ public class RegisterRequestDTO {
     public void setEstablishmentName(String establishmentName) { this.establishmentName = establishmentName; }
     public String getEstablishmentCnpj() { return establishmentCnpj; }
     public void setEstablishmentCnpj(String establishmentCnpj) { this.establishmentCnpj = establishmentCnpj; }
+    public String getEstablishmentAddress() { return establishmentAddress; }
+    public void setEstablishmentAddress(String establishmentAddress) { this.establishmentAddress = establishmentAddress; }
     public Long getEstablishmentId() { return establishmentId; }
     public void setEstablishmentId(Long establishmentId) { this.establishmentId = establishmentId; }
 }

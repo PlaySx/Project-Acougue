@@ -49,14 +49,13 @@ export default function SignUp() {
     setError('');
     const data = new FormData(event.currentTarget);
     
-    // CORREÇÃO: Adicionado o campo establishmentAddress ao payload
     const payload = {
       role: role,
       email: data.get('email'),
       password: data.get('password'),
       establishmentName: data.get('establishmentName'),
-      cnpj: data.get('cnpj'), // Corrigido de establishmentCnpj para cnpj (conforme esperado pelo backend)
-      establishmentAddress: data.get('establishmentAddress'), // Novo campo
+      establishmentCnpj: data.get('cnpj'), // CORREÇÃO: Mapeando 'cnpj' do form para 'establishmentCnpj' do DTO
+      establishmentAddress: data.get('establishmentAddress'),
       establishmentId: data.get('establishmentId'),
     };
 
@@ -103,7 +102,6 @@ export default function SignUp() {
                 <FormLabel htmlFor="cnpj">CNPJ</FormLabel>
                 <TextField id="cnpj" name="cnpj" required fullWidth />
               </FormControl>
-              {/* CORREÇÃO: Adicionado campo de endereço */}
               <FormControl>
                 <FormLabel htmlFor="establishmentAddress">Endereço do Estabelecimento</FormLabel>
                 <TextField id="establishmentAddress" name="establishmentAddress" required fullWidth placeholder="Rua, Número, Bairro" />

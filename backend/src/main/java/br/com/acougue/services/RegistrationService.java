@@ -42,6 +42,9 @@ public class RegistrationService {
             Establishment newEstablishment = new Establishment();
             newEstablishment.setName(data.getEstablishmentName());
             newEstablishment.setCnpj(data.getEstablishmentCnpj());
+            // CORREÇÃO: Salvando o endereço
+            newEstablishment.setAddress(data.getEstablishmentAddress() != null ? data.getEstablishmentAddress() : "Endereço não informado"); 
+            
             Establishment savedEstablishment = establishmentRepository.save(newEstablishment);
             
             newUser.setEstablishment(savedEstablishment);
