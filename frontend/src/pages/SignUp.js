@@ -14,7 +14,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../components/CustomIcons';
+import { SitemarkIcon } from '../components/CustomIcons';
 import { Alert, MenuItem } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -49,12 +49,14 @@ export default function SignUp() {
     setError('');
     const data = new FormData(event.currentTarget);
     
+    // CORREÇÃO: Adicionado o campo establishmentAddress ao payload
     const payload = {
       role: role,
       email: data.get('email'),
       password: data.get('password'),
       establishmentName: data.get('establishmentName'),
-      establishmentCnpj: data.get('cnpj'),
+      cnpj: data.get('cnpj'), // Corrigido de establishmentCnpj para cnpj (conforme esperado pelo backend)
+      establishmentAddress: data.get('establishmentAddress'), // Novo campo
       establishmentId: data.get('establishmentId'),
     };
 
@@ -100,6 +102,11 @@ export default function SignUp() {
               <FormControl>
                 <FormLabel htmlFor="cnpj">CNPJ</FormLabel>
                 <TextField id="cnpj" name="cnpj" required fullWidth />
+              </FormControl>
+              {/* CORREÇÃO: Adicionado campo de endereço */}
+              <FormControl>
+                <FormLabel htmlFor="establishmentAddress">Endereço do Estabelecimento</FormLabel>
+                <TextField id="establishmentAddress" name="establishmentAddress" required fullWidth placeholder="Rua, Número, Bairro" />
               </FormControl>
             </>
           )}
