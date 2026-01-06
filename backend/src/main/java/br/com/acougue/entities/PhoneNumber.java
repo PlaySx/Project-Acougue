@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_phone_numbers") // PADRONIZAÇÃO: tb_ + plural
+@Table(name = "tb_phone_numbers")
 public class PhoneNumber {
 
     @Id
@@ -19,6 +19,9 @@ public class PhoneNumber {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PhoneType type;
+    
+    @Column(name = "is_primary")
+    private boolean primary; // Campo restaurado
 
     @ManyToOne
     @JoinColumn(name = "client_id")
@@ -27,9 +30,10 @@ public class PhoneNumber {
 
     public PhoneNumber() {}
 
-    public PhoneNumber(String number, PhoneType type) {
+    public PhoneNumber(String number, PhoneType type, boolean primary) {
         this.number = number;
         this.type = type;
+        this.primary = primary;
     }
 
     // Getters e Setters
@@ -39,6 +43,8 @@ public class PhoneNumber {
     public void setNumber(String number) { this.number = number; }
     public PhoneType getType() { return type; }
     public void setType(PhoneType type) { this.type = type; }
+    public boolean isPrimary() { return primary; }
+    public void setPrimary(boolean primary) { this.primary = primary; }
     public Client getClient() { return client; }
     public void setClient(Client client) { this.client = client; }
 

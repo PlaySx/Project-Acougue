@@ -56,9 +56,9 @@ public class UserService {
             newEstablishment.setName(registerDTO.getEstablishmentName());
             newEstablishment.setCnpj(registerDTO.getCnpj());
             newEstablishment.setAddress(registerDTO.getEstablishmentAddress());
-            // O username/password do estabelecimento pode ser o mesmo do usuário ou diferente
-            newEstablishment.setUsername(registerDTO.getEmail()); 
-            newEstablishment.setPassword(user.getPassword());
+            
+            // CORREÇÃO: Removidas chamadas a setUsername e setPassword em Establishment
+            // O vínculo é feito setando o estabelecimento no usuário, o que já é feito abaixo.
 
             Establishment savedEstablishment = establishmentRepository.save(newEstablishment);
             user.setEstablishment(savedEstablishment);
