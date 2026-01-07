@@ -8,17 +8,19 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_products") // Já estava correto, mantendo o padrão
+@Table(name = "tb_products")
 public class Product {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name = "product_name", nullable = false)
+    // CORREÇÃO: Forçando o tipo TEXT
+	@Column(name = "product_name", nullable = false, columnDefinition = "TEXT")
 	private String name;
 	
-	@Column(name = "product_description")
+    // CORREÇÃO: Forçando o tipo TEXT
+	@Column(name = "product_description", columnDefinition = "TEXT")
 	private String description;
 	
 	@Enumerated(EnumType.STRING)

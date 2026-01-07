@@ -11,26 +11,30 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_clients") // PADRONIZAÇÃO: tb_ + plural
+@Table(name = "tb_clients")
 public class Client {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "client_name")
+    // CORREÇÃO: Forçando o tipo TEXT para evitar que o Hibernate crie como bytea
+	@Column(name = "client_name", columnDefinition = "TEXT")
 	private String name;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PhoneNumber> phoneNumbers = new ArrayList<>();
 
-	@Column(name = "client_address")
+    // CORREÇÃO: Forçando o tipo TEXT
+	@Column(name = "client_address", columnDefinition = "TEXT")
 	private String address;
 
-	@Column(name = "address_neighborhood")
+    // CORREÇÃO: Forçando o tipo TEXT
+	@Column(name = "address_neighborhood", columnDefinition = "TEXT")
 	private String addressNeighborhood;
 
-	@Column(name = "client_observation")
+    // CORREÇÃO: Forçando o tipo TEXT
+	@Column(name = "client_observation", columnDefinition = "TEXT")
 	private String observation;
 
 	@CreationTimestamp
@@ -38,7 +42,7 @@ public class Client {
     private LocalDateTime createdAt;
 
 	@ManyToMany
-	@JoinTable(name = "tb_client_products", // PADRONIZAÇÃO: Tabela de junção também com tb_
+	@JoinTable(name = "tb_client_products", 
             joinColumns = @JoinColumn(name = "client_id"), 
             inverseJoinColumns = @JoinColumn(name = "product_id"))
 	@JsonIgnore

@@ -7,20 +7,22 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_establishments") // PADRONIZAÇÃO: tb_ + plural
+@Table(name = "tb_establishments")
 public class Establishment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    // CORREÇÃO: Forçando o tipo TEXT
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String name;
 
     @Column(nullable = false, unique = true)
     private String cnpj;
 
-    @Column(nullable = false)
+    // CORREÇÃO: Forçando o tipo TEXT
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL)
