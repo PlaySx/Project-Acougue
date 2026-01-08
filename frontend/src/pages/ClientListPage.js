@@ -38,15 +38,27 @@ export default function ClientListPage() {
   const fetchClients = useCallback(async () => {
     if (!user?.establishmentId) return;
     setError('');
+    setLoading(true);
+
     try {
-      const params = new URLSearchParams({ establishmentId: user.establishmentId });
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          params.append(key, key.includes('Date') ? format(value, 'yyyy-MM-dd') : value);
-        }
-      });
-      // CORREÇÃO: Rota corrigida de /advanced-search para /search
-      const response = await apiClient.get(`/clients/search?${params.toString()}`);
+      // CORREÇÃO DE PERFORMANCE: Usa a busca leve por padrão
+      const hasFilters = Object.values(filters).some(v => v !== '' && v !== null);
+      let response;
+
+      if (hasFilters) {
+        // Se houver filtros, usa a busca avançada (pesada)
+        const params = new URLSearchParams({ establishmentId: user.establishmentId });
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) {
+            params.append(key, key.includes('Date') ? format(value, 'yyyy-MM-dd') : value);
+          }
+        });
+        response = await apiClient.get(`/clients/search?${params.toString()}`);
+      } else {
+        // Se não houver filtros, usa a busca de resumo (super leve)
+        response = await apiClient.get(`/clients/summary?establishmentId=${user.establishmentId}`);
+      }
+      
       setClients(response.data);
     } catch (err) {
       setError('Falha ao buscar clientes.');
@@ -56,7 +68,6 @@ export default function ClientListPage() {
   }, [user, filters]);
 
   useEffect(() => {
-    setLoading(true);
     fetchClients();
   }, [fetchClients]);
 
@@ -79,7 +90,7 @@ export default function ClientListPage() {
       name: client.name,
       address: client.address,
       addressNeighborhood: client.addressNeighborhood,
-      primaryPhoneNumber: client.phoneNumbers?.[0]?.number || ''
+      primaryPhoneNumber: client.primaryPhone || '' // Usando o campo do DTO de resumo
     });
   };
 
@@ -95,18 +106,22 @@ export default function ClientListPage() {
 
   const handleSaveClick = async (client) => {
     try {
-      const originalPhone = client.phoneNumbers?.[0] || {};
+      // Para salvar, precisamos do DTO completo. Buscamos ele antes de salvar.
+      const fullClientResponse = await apiClient.get(`/clients/${client.id}`);
+      const fullClient = fullClientResponse.data;
+
+      const originalPhone = fullClient.phoneNumbers?.[0] || {};
       const requestData = {
         name: editedRowData.name,
         address: editedRowData.address,
         addressNeighborhood: editedRowData.addressNeighborhood,
-        observation: client.observation,
+        observation: fullClient.observation,
         phoneNumbers: [{ ...originalPhone, number: editedRowData.primaryPhoneNumber, isPrimary: true }],
         establishmentId: user.establishmentId
       };
       
       const response = await apiClient.put(`/clients/${client.id}`, requestData);
-      setClients(prev => prev.map(c => (c.id === client.id ? response.data : c)));
+      setClients(prev => prev.map(c => (c.id === client.id ? { ...c, ...response.data } : c)));
       setSuccess('Cliente atualizado com sucesso!');
       handleCancelClick();
     } catch (err) {
@@ -151,7 +166,6 @@ export default function ClientListPage() {
               <TableBody>
                 {clients.map((client) => {
                   const isEditMode = editRowId === client.id;
-                  const primaryPhone = client.phoneNumbers?.find(p => p.isPrimary) || client.phoneNumbers?.[0];
                   return (
                     <TableRow key={client.id} hover>
                       <TableCell>
@@ -159,7 +173,7 @@ export default function ClientListPage() {
                           {isEditMode ? editedRowData.name : client.name}
                         </Link>
                       </TableCell>
-                      <TableCell>{isEditMode ? <TextField size="small" name="primaryPhoneNumber" value={editedRowData.primaryPhoneNumber} onChange={handleInputChange} /> : primaryPhone?.number}</TableCell>
+                      <TableCell>{isEditMode ? <TextField size="small" name="primaryPhoneNumber" value={editedRowData.primaryPhoneNumber} onChange={handleInputChange} /> : client.primaryPhone}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="address" value={editedRowData.address} onChange={handleInputChange} /> : client.address}</TableCell>
                       <TableCell>{isEditMode ? <TextField size="small" name="addressNeighborhood" value={editedRowData.addressNeighborhood} onChange={handleInputChange} /> : client.addressNeighborhood}</TableCell>
                       <TableCell>

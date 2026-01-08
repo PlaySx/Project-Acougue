@@ -18,32 +18,45 @@ import java.util.Map;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    List<Order> findByEstablishmentId(Long establishmentId);
-    List<Order> findByClientId(Long clientId);
+    // OTIMIZAÇÃO 1: JOIN FETCH para trazer tudo de uma vez na listagem principal
+    @Query("SELECT DISTINCT o FROM Order o " +
+           "LEFT JOIN FETCH o.client c " +
+           "LEFT JOIN FETCH o.items oi " +
+           "LEFT JOIN FETCH oi.product p " +
+           "WHERE o.establishment.id = :establishmentId ORDER BY o.datahora DESC")
+    List<Order> findByEstablishmentId(@Param("establishmentId") Long establishmentId);
+
+    // OTIMIZAÇÃO 2: Sua sugestão para buscar por cliente trazendo o estabelecimento
+    @Query("SELECT DISTINCT o FROM Order o " +
+           "LEFT JOIN FETCH o.establishment e " +
+           "LEFT JOIN FETCH o.items " +
+           "WHERE o.client.id = :clientId")
+    List<Order> findByClientIdWithEstablishment(@Param("clientId") Long clientId);
+    
+    // Mantendo compatibilidade com método antigo, mas otimizado
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.client.id = :clientId")
+    List<Order> findByClientId(@Param("clientId") Long clientId);
+    
     List<Order> findByStatusAndEstablishmentId(OrderStatus status, Long establishmentId);
     
-    // Método padronizado
-    List<Order> findByEstablishmentIdAndDatahoraBetween(Long establishmentId, LocalDateTime start, LocalDateTime end);
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.establishment.id = :establishmentId AND o.datahora BETWEEN :start AND :end ORDER BY o.datahora DESC")
+    List<Order> findByEstablishmentIdAndDatahoraBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.establishment.id = :establishmentId")
     Long countByEstablishmentId(@Param("establishmentId") Long establishmentId);
 
-    // Pedidos recentes (com filtro de data opcional na query, mas aqui fixo para simplicidade do método)
     @Query("SELECT o FROM Order o WHERE o.establishment.id = :establishmentId AND o.datahora >= :date ORDER BY o.datahora DESC")
     List<Order> findRecentOrdersByEstablishmentId(@Param("establishmentId") Long establishmentId, @Param("date") LocalDateTime date);
 
-    // KPIs com intervalo de data
     @Query("SELECT COUNT(o) FROM Order o WHERE o.establishment.id = :establishmentId AND o.datahora BETWEEN :start AND :end")
     Long countByEstablishmentIdAndDatahoraBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT SUM(o.totalValue) FROM Order o WHERE o.establishment.id = :establishmentId AND o.datahora BETWEEN :start AND :end")
     BigDecimal sumTotalValueByEstablishmentIdAndDatahoraBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // Status com intervalo de data (ATUALIZADO)
     @Query("SELECT o.status, COUNT(o) FROM Order o WHERE o.establishment.id = :establishmentId AND o.datahora BETWEEN :start AND :end GROUP BY o.status")
     Map<OrderStatus, Long> countByEstablishmentIdAndDatahoraBetweenGroupByStatus(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // Top Produtos com intervalo de data (ATUALIZADO)
     @Query("SELECT new br.com.acougue.dto.TopProductDTO(oi.product.name, COUNT(oi.product.id)) " +
            "FROM OrderItem oi WHERE oi.order.establishment.id = :establishmentId " +
            "AND oi.order.datahora BETWEEN :start AND :end " +
@@ -51,7 +64,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "ORDER BY COUNT(oi.product.id) DESC")
     List<TopProductDTO> findTopSellingProducts(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
 
-    // Faturamento Diário com intervalo de data (ATUALIZADO)
     @Query("SELECT new br.com.acougue.dto.DailyRevenueDTO(CAST(o.datahora AS LocalDate), SUM(o.totalValue)) " +
            "FROM Order o " +
            "WHERE o.establishment.id = :establishmentId AND o.datahora BETWEEN :start AND :end " +
