@@ -14,7 +14,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     boolean existsByPhoneNumbersNumber(String number);
     
-    // Novo método para evitar duplicatas de clientes sem telefone
     boolean existsByNameAndPhoneNumbersIsNull(String name);
 
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId")
@@ -23,15 +22,16 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId AND c.createdAt BETWEEN :start AND :end")
     Long countByEstablishmentIdAndCreatedAtBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
+    // CORREÇÃO: Adicionando CAST( ... as string) para garantir que o Postgres entenda que é texto
     @Query("SELECT DISTINCT c FROM Client c " +
            "LEFT JOIN c.orders o " +
            "LEFT JOIN o.items oi " +
            "LEFT JOIN oi.product p " +
            "WHERE c.establishment.id = :establishmentId " +
-           "AND (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-           "AND (:address IS NULL OR LOWER(c.address) LIKE LOWER(CONCAT('%', :address, '%'))) " +
-           "AND (:neighborhood IS NULL OR LOWER(c.addressNeighborhood) LIKE LOWER(CONCAT('%', :neighborhood, '%'))) " +
-           "AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%'))) " +
+           "AND (:name IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
+           "AND (:address IS NULL OR LOWER(CAST(c.address AS string)) LIKE LOWER(CONCAT('%', CAST(:address AS string), '%'))) " +
+           "AND (:neighborhood IS NULL OR LOWER(CAST(c.addressNeighborhood AS string)) LIKE LOWER(CONCAT('%', CAST(:neighborhood AS string), '%'))) " +
+           "AND (:productName IS NULL OR LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%'))) " +
            "AND (cast(:startDate as timestamp) IS NULL OR o.datahora >= :startDate) " +
            "AND (cast(:endDate as timestamp) IS NULL OR o.datahora <= :endDate)")
     List<Client> findByAdvancedFilters(
