@@ -45,7 +45,8 @@ export default function ClientListPage() {
           params.append(key, key.includes('Date') ? format(value, 'yyyy-MM-dd') : value);
         }
       });
-      const response = await apiClient.get(`/clients/advanced-search?${params.toString()}`);
+      // CORREÇÃO: Rota corrigida de /advanced-search para /search
+      const response = await apiClient.get(`/clients/search?${params.toString()}`);
       setClients(response.data);
     } catch (err) {
       setError('Falha ao buscar clientes.');
