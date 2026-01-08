@@ -2,6 +2,7 @@ package br.com.acougue.services;
 
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
+import br.com.acougue.dto.ClientSummaryDTO;
 import br.com.acougue.entities.Client;
 import br.com.acougue.entities.Establishment;
 import br.com.acougue.entities.PhoneNumber;
@@ -37,6 +38,11 @@ public class ClientService {
         this.clientRepository = clientRepository;
         this.establishmentRepository = establishmentRepository;
         this.clientMapper = clientMapper;
+    }
+
+    // NOVO MÉTODO: Listagem leve
+    public List<ClientSummaryDTO> listSummaries(Long establishmentId) {
+        return clientRepository.findClientSummariesByEstablishmentId(establishmentId);
     }
 
     @Transactional

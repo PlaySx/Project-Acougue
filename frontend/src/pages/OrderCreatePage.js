@@ -36,8 +36,10 @@ export default function OrderCreatePage() {
     const fetchData = async () => {
       try {
         const [clientsRes, productsRes] = await Promise.all([
-          apiClient.get(`/clients/advanced-search?establishmentId=${user.establishmentId}`),
-          apiClient.get(`/products?establishmentId=${user.establishmentId}`)
+          // CORREÇÃO: Usando o endpoint leve para listar clientes
+          apiClient.get(`/clients/summary?establishmentId=${user.establishmentId}`),
+          // CORREÇÃO: Usando o endpoint leve para listar produtos
+          apiClient.get(`/products/summary?establishmentId=${user.establishmentId}`)
         ]);
         
         let loadedClients = clientsRes.data;
@@ -50,25 +52,20 @@ export default function OrderCreatePage() {
         if (preSelectedClient) {
           setSelectedClient(preSelectedClient);
         } else if (repeatOrder) {
-          // 1. Tenta encontrar o cliente na lista carregada
           let clientToSelect = loadedClients.find(c => c.id === repeatOrder.clientId);
 
-          // 2. Se não encontrar (ex: lista incompleta), cria o objeto com os dados do pedido
           if (!clientToSelect && repeatOrder.clientId) {
              clientToSelect = {
                  id: repeatOrder.clientId,
                  name: repeatOrder.clientName || "Cliente não identificado"
              };
-             // Adiciona à lista para o Autocomplete reconhecer
              setClients(prev => [...prev, clientToSelect]);
           }
 
-          // 3. Define o cliente selecionado
           if (clientToSelect) {
             setSelectedClient(clientToSelect);
           }
 
-          // Reconstrói os itens do pedido
           const newItems = [];
           let repeatError = '';
           for (const oldItem of repeatOrder.items) {

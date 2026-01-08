@@ -2,6 +2,7 @@ package br.com.acougue.services;
 
 import br.com.acougue.dto.ProductRequestDTO;
 import br.com.acougue.dto.ProductResponseDTO;
+import br.com.acougue.dto.ProductSummaryDTO;
 import br.com.acougue.entities.Product;
 import br.com.acougue.enums.Role;
 import br.com.acougue.exceptions.ResourceNotFoundException;
@@ -26,6 +27,12 @@ public class ProductService {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.auditService = auditService;
+    }
+
+    // NOVO MÉTODO: Listagem leve
+    @Transactional(readOnly = true)
+    public List<ProductSummaryDTO> listSummaries(Long establishmentId) {
+        return productRepository.findProductSummariesByEstablishmentId(establishmentId);
     }
 
     @Transactional
@@ -89,7 +96,6 @@ public class ProductService {
         return productMapper.toResponseDTOList(productRepository.findByEstablishmentId(establishmentId));
     }
 
-    // Adicionando o método que faltava
     @Transactional(readOnly = true)
     public List<ProductResponseDTO> findByPriceRange(BigDecimal minValue, BigDecimal maxValue, Long establishmentId) {
         List<Product> products = productRepository.findByUnitPriceBetweenAndEstablishmentId(minValue, maxValue, establishmentId);

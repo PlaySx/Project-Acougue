@@ -1,5 +1,6 @@
 package br.com.acougue.repository;
 
+import br.com.acougue.dto.ClientSummaryDTO;
 import br.com.acougue.entities.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,8 +23,13 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId AND c.createdAt BETWEEN :start AND :end")
     Long countByEstablishmentIdAndCreatedAtBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // CORREÇÃO DE PERFORMANCE: Adicionado JOIN FETCH para trazer telefones e estabelecimento na mesma consulta
-    // Isso resolve o problema de N+1 selects
+    // NOVA QUERY OTIMIZADA PARA LISTAGEM
+    @Query("SELECT new br.com.acougue.dto.ClientSummaryDTO(c.id, c.name, ph.number) " +
+           "FROM Client c LEFT JOIN c.phoneNumbers ph " +
+           "WHERE c.establishment.id = :establishmentId AND (ph.primary = true OR ph IS NULL)")
+    List<ClientSummaryDTO> findClientSummariesByEstablishmentId(@Param("establishmentId") Long establishmentId);
+
+    // Query antiga, mantida para referência ou outros usos
     @Query("SELECT DISTINCT c FROM Client c " +
            "LEFT JOIN FETCH c.phoneNumbers " +
            "LEFT JOIN FETCH c.establishment " +

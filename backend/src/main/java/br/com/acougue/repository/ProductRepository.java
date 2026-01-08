@@ -8,14 +8,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import br.com.acougue.dto.ProductSummaryDTO;
 import br.com.acougue.entities.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 	
-    // CORREÇÃO DE PERFORMANCE: JOIN FETCH para trazer o estabelecimento junto
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.establishment WHERE p.establishment.id = :establishmentId")
     List<Product> findByEstablishmentId(@Param("establishmentId") Long establishmentId);
+    
+    // NOVA QUERY OTIMIZADA PARA LISTAGEM LEVE
+    @Query("SELECT new br.com.acougue.dto.ProductSummaryDTO(p.id, p.name, p.unitPrice, p.pricingType, p.stockQuantity) " +
+           "FROM Product p WHERE p.establishment.id = :establishmentId")
+    List<ProductSummaryDTO> findProductSummariesByEstablishmentId(@Param("establishmentId") Long establishmentId);
     
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.establishment WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) AND p.establishment.id = :establishmentId")
     List<Product> findByNameContainingIgnoreCaseAndEstablishmentId(@Param("name") String name, @Param("establishmentId") Long establishmentId);
