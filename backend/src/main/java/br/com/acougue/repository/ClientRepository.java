@@ -22,8 +22,11 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId AND c.createdAt BETWEEN :start AND :end")
     Long countByEstablishmentIdAndCreatedAtBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // CORREÇÃO: Adicionando CAST( ... as string) para garantir que o Postgres entenda que é texto
+    // CORREÇÃO DE PERFORMANCE: Adicionado JOIN FETCH para trazer telefones e estabelecimento na mesma consulta
+    // Isso resolve o problema de N+1 selects
     @Query("SELECT DISTINCT c FROM Client c " +
+           "LEFT JOIN FETCH c.phoneNumbers " +
+           "LEFT JOIN FETCH c.establishment " +
            "LEFT JOIN c.orders o " +
            "LEFT JOIN o.items oi " +
            "LEFT JOIN oi.product p " +

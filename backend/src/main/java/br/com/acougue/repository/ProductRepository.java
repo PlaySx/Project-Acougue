@@ -13,13 +13,16 @@ import br.com.acougue.entities.Product;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 	
-    List<Product> findByEstablishmentId(Long establishmentId);
+    // CORREÇÃO DE PERFORMANCE: JOIN FETCH para trazer o estabelecimento junto
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.establishment WHERE p.establishment.id = :establishmentId")
+    List<Product> findByEstablishmentId(@Param("establishmentId") Long establishmentId);
     
-    List<Product> findByNameContainingIgnoreCaseAndEstablishmentId(String name, Long establishmentId);
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.establishment WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) AND p.establishment.id = :establishmentId")
+    List<Product> findByNameContainingIgnoreCaseAndEstablishmentId(@Param("name") String name, @Param("establishmentId") Long establishmentId);
     
     @Query("SELECT COUNT(p) FROM Product p WHERE p.establishment.id = :establishmentId")
     Long countByEstablishmentId(@Param("establishmentId") Long establishmentId);
     
-    // Corrigido para usar o novo nome do campo 'unitPrice'
-    List<Product> findByUnitPriceBetweenAndEstablishmentId(BigDecimal minValue, BigDecimal maxValue, Long establishmentId);
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.establishment WHERE p.unitPrice BETWEEN :minValue AND :maxValue AND p.establishment.id = :establishmentId")
+    List<Product> findByUnitPriceBetweenAndEstablishmentId(@Param("minValue") BigDecimal minValue, @Param("maxValue") BigDecimal maxValue, @Param("establishmentId") Long establishmentId);
 }
