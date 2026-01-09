@@ -23,10 +23,12 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Query("SELECT COUNT(c) FROM Client c WHERE c.establishment.id = :establishmentId AND c.createdAt BETWEEN :start AND :end")
     Long countByEstablishmentIdAndCreatedAtBetween(@Param("establishmentId") Long establishmentId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // QUERY OTIMIZADA ATUALIZADA: Agora traz endereço e bairro também
-    @Query("SELECT new br.com.acougue.dto.ClientSummaryDTO(c.id, c.name, ph.number, c.address, c.addressNeighborhood) " +
+    // CORREÇÃO: Removida a restrição estrita de primary=true. 
+    // Agora traz o cliente mesmo se o telefone não estiver marcado como principal.
+    // O DISTINCT garante que o cliente não apareça duplicado se tiver vários telefones.
+    @Query("SELECT DISTINCT new br.com.acougue.dto.ClientSummaryDTO(c.id, c.name, ph.number, c.address, c.addressNeighborhood) " +
            "FROM Client c LEFT JOIN c.phoneNumbers ph " +
-           "WHERE c.establishment.id = :establishmentId AND (ph.primary = true OR ph IS NULL)")
+           "WHERE c.establishment.id = :establishmentId")
     List<ClientSummaryDTO> findClientSummariesByEstablishmentId(@Param("establishmentId") Long establishmentId);
 
     @Query("SELECT DISTINCT c FROM Client c " +
