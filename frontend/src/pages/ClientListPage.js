@@ -34,6 +34,20 @@ export default function ClientListPage() {
   const [filters, setFilters] = useState({
     name: '', address: '', neighborhood: '', productName: '', startDate: null, endDate: null,
   });
+  
+  // Estado para debounce
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  // Efeito de Debounce: Atualiza debouncedFilters 500ms após a última alteração em filters
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [filters]);
 
   const fetchClients = useCallback(async () => {
     if (!user?.establishmentId) return;
@@ -41,31 +55,32 @@ export default function ClientListPage() {
     setLoading(true);
 
     try {
-      // CORREÇÃO DE PERFORMANCE: Usa a busca leve por padrão
-      const hasFilters = Object.values(filters).some(v => v !== '' && v !== null);
+      // Usa debouncedFilters em vez de filters diretos
+      const hasFilters = Object.values(debouncedFilters).some(v => v !== '' && v !== null);
       let response;
 
       if (hasFilters) {
-        // Se houver filtros, usa a busca avançada (pesada)
         const params = new URLSearchParams({ establishmentId: user.establishmentId });
-        Object.entries(filters).forEach(([key, value]) => {
+        Object.entries(debouncedFilters).forEach(([key, value]) => {
           if (value) {
             params.append(key, key.includes('Date') ? format(value, 'yyyy-MM-dd') : value);
           }
         });
         response = await apiClient.get(`/clients/search?${params.toString()}`);
       } else {
-        // Se não houver filtros, usa a busca de resumo (super leve)
         response = await apiClient.get(`/clients/summary?establishmentId=${user.establishmentId}`);
       }
       
       setClients(response.data);
     } catch (err) {
-      setError('Falha ao buscar clientes.');
+      // Ignora erro se o componente tiver sido desmontado ou se for cancelamento
+      if (err.name !== 'CanceledError') {
+          setError('Falha ao buscar clientes.');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user, filters]);
+  }, [user, debouncedFilters]); // Depende de debouncedFilters
 
   useEffect(() => {
     fetchClients();
@@ -90,7 +105,7 @@ export default function ClientListPage() {
       name: client.name,
       address: client.address,
       addressNeighborhood: client.addressNeighborhood,
-      primaryPhoneNumber: client.primaryPhone || '' // Usando o campo do DTO de resumo
+      primaryPhoneNumber: client.primaryPhone || '' 
     });
   };
 
@@ -106,7 +121,6 @@ export default function ClientListPage() {
 
   const handleSaveClick = async (client) => {
     try {
-      // Para salvar, precisamos do DTO completo. Buscamos ele antes de salvar.
       const fullClientResponse = await apiClient.get(`/clients/${client.id}`);
       const fullClient = fullClientResponse.data;
 

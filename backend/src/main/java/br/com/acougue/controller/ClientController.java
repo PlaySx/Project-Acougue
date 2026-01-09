@@ -3,6 +3,7 @@ package br.com.acougue.controller;
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
 import br.com.acougue.dto.ClientSummaryDTO;
+import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.services.ClientService;
 import br.com.acougue.services.SecurityService;
 import jakarta.validation.Valid;
@@ -77,6 +78,14 @@ public class ClientController {
     public ResponseEntity<ClientResponseDTO> findById(@PathVariable Long id) {
         ClientResponseDTO client = clientService.findById(id);
         return ResponseEntity.ok(client);
+    }
+    
+    // NOVO ENDPOINT: Buscar pedidos de um cliente
+    @GetMapping("/{id}/orders")
+    @PreAuthorize("@securityService.canAccessClient(#id)")
+    public ResponseEntity<List<OrderResponseDTO>> findOrdersByClientId(@PathVariable Long id) {
+        List<OrderResponseDTO> orders = clientService.findOrdersByClientId(id);
+        return ResponseEntity.ok(orders);
     }
 
     @PutMapping("/{id}")

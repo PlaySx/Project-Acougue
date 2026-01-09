@@ -3,14 +3,18 @@ package br.com.acougue.services;
 import br.com.acougue.dto.ClientRequestDTO;
 import br.com.acougue.dto.ClientResponseDTO;
 import br.com.acougue.dto.ClientSummaryDTO;
+import br.com.acougue.dto.OrderResponseDTO;
 import br.com.acougue.entities.Client;
 import br.com.acougue.entities.Establishment;
+import br.com.acougue.entities.Order;
 import br.com.acougue.entities.PhoneNumber;
 import br.com.acougue.enums.PhoneType;
 import br.com.acougue.exceptions.ResourceNotFoundException;
 import br.com.acougue.mapper.ClientMapper;
+import br.com.acougue.mapper.OrderMapper;
 import br.com.acougue.repository.ClientRepository;
 import br.com.acougue.repository.EstablishmentRepository;
+import br.com.acougue.repository.OrderRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,12 +36,16 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final EstablishmentRepository establishmentRepository;
+    private final OrderRepository orderRepository; // Injetar OrderRepository
     private final ClientMapper clientMapper;
+    private final OrderMapper orderMapper; // Injetar OrderMapper
 
-    public ClientService(ClientRepository clientRepository, EstablishmentRepository establishmentRepository, ClientMapper clientMapper) {
+    public ClientService(ClientRepository clientRepository, EstablishmentRepository establishmentRepository, OrderRepository orderRepository, ClientMapper clientMapper, OrderMapper orderMapper) {
         this.clientRepository = clientRepository;
         this.establishmentRepository = establishmentRepository;
+        this.orderRepository = orderRepository;
         this.clientMapper = clientMapper;
+        this.orderMapper = orderMapper;
     }
 
     // NOVO MÉTODO: Listagem leve
@@ -165,6 +173,15 @@ public class ClientService {
     public ClientResponseDTO findById(Long id) {
         Client client = clientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com o ID: " + id));
         return clientMapper.toResponseDTO(client);
+    }
+    
+    // NOVO MÉTODO: Buscar pedidos de um cliente
+    public List<OrderResponseDTO> findOrdersByClientId(Long clientId) {
+        if (!clientRepository.existsById(clientId)) {
+            throw new ResourceNotFoundException("Cliente não encontrado com o ID: " + clientId);
+        }
+        List<Order> orders = orderRepository.findByClientId(clientId);
+        return orderMapper.toResponseDTOList(orders);
     }
 
     @Transactional
