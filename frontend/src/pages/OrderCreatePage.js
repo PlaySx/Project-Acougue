@@ -36,9 +36,7 @@ export default function OrderCreatePage() {
     const fetchData = async () => {
       try {
         const [clientsRes, productsRes] = await Promise.all([
-          // CORREÇÃO: Usando o endpoint leve para listar clientes
           apiClient.get(`/clients/summary?establishmentId=${user.establishmentId}`),
-          // CORREÇÃO: Usando o endpoint leve para listar produtos
           apiClient.get(`/products/summary?establishmentId=${user.establishmentId}`)
         ]);
         
@@ -46,7 +44,6 @@ export default function OrderCreatePage() {
         setClients(loadedClients);
         setProducts(productsRes.data);
 
-        // LÓGICA DE REPETIR PEDIDO / PRÉ-SELEÇÃO
         const { preSelectedClient, repeatOrder } = location.state || {};
         
         if (preSelectedClient) {
@@ -157,15 +154,11 @@ export default function OrderCreatePage() {
                 setSelectedClient(newValue);
               }}
               options={clients}
+              // CORREÇÃO: Removido filterOptions manual para usar o padrão do MUI que é mais robusto
               getOptionLabel={(option) => option.name || ""}
-              filterOptions={(options, { inputValue }) => {
-                const lowercasedInputValue = inputValue.toLowerCase();
-                return options.filter(option => 
-                  option.name.toLowerCase().includes(lowercasedInputValue)
-                );
-              }}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => <TextField {...params} label="Buscar Cliente" required />}
+              noOptionsText="Nenhum cliente encontrado"
             />
             <Button 
               variant="outlined" 
@@ -178,7 +171,14 @@ export default function OrderCreatePage() {
           </Box>
           
           <Divider>Produtos</Divider>
-          <Autocomplete options={products} getOptionLabel={(p) => `${p.name} - R$ ${p.unitPrice.toFixed(2)} / ${p.pricingType === 'PER_KG' ? 'kg' : 'un'} (${p.stockQuantity} ${p.pricingType === 'PER_KG' ? 'g' : 'un'} em estoque)`} onChange={(_, v) => handleAddProduct(v)} renderInput={(params) => <TextField {...params} label="Adicionar Produto" />} value={null} />
+          <Autocomplete 
+            options={products} 
+            getOptionLabel={(p) => `${p.name} - R$ ${p.unitPrice.toFixed(2)} / ${p.pricingType === 'PER_KG' ? 'kg' : 'un'} (${p.stockQuantity} ${p.pricingType === 'PER_KG' ? 'g' : 'un'} em estoque)`} 
+            onChange={(_, v) => handleAddProduct(v)} 
+            renderInput={(params) => <TextField {...params} label="Adicionar Produto" />} 
+            value={null} 
+            noOptionsText="Nenhum produto encontrado"
+          />
           
           <List>
             {orderItems.map((item, index) => (
