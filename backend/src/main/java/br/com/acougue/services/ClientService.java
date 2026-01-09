@@ -18,6 +18,7 @@ import br.com.acougue.repository.OrderRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,9 +37,9 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final EstablishmentRepository establishmentRepository;
-    private final OrderRepository orderRepository; // Injetar OrderRepository
+    private final OrderRepository orderRepository;
     private final ClientMapper clientMapper;
-    private final OrderMapper orderMapper; // Injetar OrderMapper
+    private final OrderMapper orderMapper;
 
     public ClientService(ClientRepository clientRepository, EstablishmentRepository establishmentRepository, OrderRepository orderRepository, ClientMapper clientMapper, OrderMapper orderMapper) {
         this.clientRepository = clientRepository;
@@ -48,9 +49,10 @@ public class ClientService {
         this.orderMapper = orderMapper;
     }
 
-    // NOVO MÉTODO: Listagem leve
-    public List<ClientSummaryDTO> listSummaries(Long establishmentId) {
-        return clientRepository.findClientSummariesByEstablishmentId(establishmentId);
+    // NOVO MÉTODO: Listagem leve com filtro de nome e limite de resultados
+    public List<ClientSummaryDTO> listSummaries(Long establishmentId, String name) {
+        // Limita a 20 resultados para ser rápido no autocomplete
+        return clientRepository.findClientSummariesByEstablishmentIdAndName(establishmentId, name, PageRequest.of(0, 20));
     }
 
     @Transactional
@@ -175,7 +177,6 @@ public class ClientService {
         return clientMapper.toResponseDTO(client);
     }
     
-    // NOVO MÉTODO: Buscar pedidos de um cliente
     public List<OrderResponseDTO> findOrdersByClientId(Long clientId) {
         if (!clientRepository.existsById(clientId)) {
             throw new ResourceNotFoundException("Cliente não encontrado com o ID: " + clientId);

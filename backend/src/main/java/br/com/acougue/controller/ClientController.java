@@ -50,11 +50,13 @@ public class ClientController {
         }
     }
 
-    // NOVO ENDPOINT: Listagem leve para o dropdown de pedidos
+    // NOVO ENDPOINT: Listagem leve com filtro de nome (Server-Side Filtering)
     @GetMapping("/summary")
     @PreAuthorize("@securityService.hasAccessToEstablishment(#establishmentId)")
-    public ResponseEntity<List<ClientSummaryDTO>> listSummaries(@RequestParam Long establishmentId) {
-        List<ClientSummaryDTO> summaries = clientService.listSummaries(establishmentId);
+    public ResponseEntity<List<ClientSummaryDTO>> listSummaries(
+            @RequestParam Long establishmentId,
+            @RequestParam(required = false) String name) { // Adicionado parâmetro name
+        List<ClientSummaryDTO> summaries = clientService.listSummaries(establishmentId, name);
         return ResponseEntity.ok(summaries);
     }
 
@@ -80,7 +82,6 @@ public class ClientController {
         return ResponseEntity.ok(client);
     }
     
-    // NOVO ENDPOINT: Buscar pedidos de um cliente
     @GetMapping("/{id}/orders")
     @PreAuthorize("@securityService.canAccessClient(#id)")
     public ResponseEntity<List<OrderResponseDTO>> findOrdersByClientId(@PathVariable Long id) {
